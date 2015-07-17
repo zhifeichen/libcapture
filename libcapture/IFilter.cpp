@@ -113,10 +113,10 @@ STDMETHODIMP MyCapFilter::Run(REFERENCE_TIME tStart)
 void MyCapFilter::enc_cb(cc_src_sample_t smple, void* data)
 {
 	MyCapFilter* f = (MyCapFilter*)data;
-	f->encode(smple);
+	f->enc_cb(smple);
 }
 
-void MyCapFilter::encode(cc_src_sample_t smple)
+void MyCapFilter::enc_cb(cc_src_sample_t smple)
 {
 	//MyMSG msg;
 	//msg.bodylen = sizeof(msg.body.sample);
@@ -581,10 +581,10 @@ STDMETHODIMP CMyCapAudioFilter::Run(REFERENCE_TIME tStart)
 void CMyCapAudioFilter::enc_cb(cc_src_sample_t smple, void* data)
 {
 	CMyCapAudioFilter* f = (CMyCapAudioFilter*)data;
-	f->encode(smple);
+	f->enc_cb(smple);
 }
 
-void CMyCapAudioFilter::encode(cc_src_sample_t smple)
+void CMyCapAudioFilter::enc_cb(cc_src_sample_t smple)
 {
 	//MyMSG msg;
 	//msg.bodylen = sizeof(msg.body.sample);
