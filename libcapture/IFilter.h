@@ -176,7 +176,7 @@ public:
 
 private:
 
-	// x264 encode call back
+	// aac encode call back
 	static void enc_cb(cc_src_sample_t smple, void* data);
 	void encode(cc_src_sample_t smple);
 };

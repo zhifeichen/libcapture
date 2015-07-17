@@ -60,3 +60,4 @@ run_test/Debug/run_test.Build.CppClean.log
 run_test/Debug/run_test.log
 run_test/Debug/vc120.pdb
 server/Debug/captureServer.log
+/libcapture.v12.suo
