@@ -708,7 +708,7 @@ HRESULT access_sys_t::BuildCapture(void)
 
 	// Render the preview pin on the video capture filter
 	// Use this instead of g_pGraph->RenderFile
-	MyCapFilter *myfilter = new MyCapFilter(this, NULL, &m_lock, NULL);
+	MyCapVideoFilter *myfilter = new MyCapVideoFilter(this, NULL, &m_lock, NULL);
 	hr = p_graph->AddFilter(myfilter, L"video filter");
 	hr = p_capture_graph_builder2->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video,
 		pSrcFilter, NULL, myfilter);
@@ -876,7 +876,7 @@ HRESULT access_sys_t::BuildCapture(void)
 //		return hr;
 //	}
 //
-//	MyCapFilter *myfilter = new MyCapFilter(this, NULL, &m_lock, NULL);
+//	MyCapVideoFilter *myfilter = new MyCapVideoFilter(this, NULL, &m_lock, NULL);
 //	hr = p_graph->AddFilter(myfilter, L"file filter");
 //
 //	// Render the preview pin on the audio capture filter

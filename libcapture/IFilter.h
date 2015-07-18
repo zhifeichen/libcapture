@@ -13,7 +13,7 @@
 #include "aacencode.h"
 
 // {D06A31CB-3518-4054-A167-65CE67D7A931}
-DEFINE_GUID(CLSID_MyCapFilter,
+DEFINE_GUID(CLSID_MyCapVideoFilter,
 	0xd06a31cb, 0x3518, 0x4054, 0xa1, 0x67, 0x65, 0xce, 0x67, 0xd7, 0xa9, 0x31);
 
 // {25A7F004-9B2D-4B77-AEFC-08B0084F2D4F}
@@ -25,15 +25,15 @@ DEFINE_GUID(CLSID_CMyCapAudioFilter,
 DEFINE_GUID(CLSID_PushSourceFilter,
 	0x7d732dc9, 0x5770, 0x4d20, 0x90, 0x90, 0x14, 0x42, 0x99, 0x0, 0x99, 0x2c);
 
-class MyCapFilter;
+class MyCapVideoFilter;
 //  Pin object
 
-class CMyCapInputPin : public CRenderedInputPin
+class CMyCapVideoInputPin : public CRenderedInputPin
 {
 	//CDump    * const m_pDump;           // Main renderer object
 	//CCritSec * const m_pReceiveLock;    // Sample critical section
 	REFERENCE_TIME m_tLast;             // Last sample receive time
-	MyCapFilter* m_pfilter;
+	MyCapVideoFilter* m_pfilter;
 	CMediaType m_mt;
 	enum AVPixelFormat m_pix_fmt;
 	int m_width, m_height;
@@ -43,7 +43,7 @@ class CMyCapInputPin : public CRenderedInputPin
 	
 public:
 
-	CMyCapInputPin(MyCapFilter* pFilter);
+	CMyCapVideoInputPin(MyCapVideoFilter* pFilter);
 
 	// Do something with this media sample
 	STDMETHODIMP Receive(IMediaSample *pSample);
@@ -67,10 +67,10 @@ public:
 		double dRate);
 };
 
-class MyCapFilter : public CBaseFilter
+class MyCapVideoFilter : public CBaseFilter
 {
-	friend class CMyCapInputPin;
-	CMyCapInputPin* m_pPin;
+	friend class CMyCapVideoInputPin;
+	CMyCapVideoInputPin* m_pPin;
 	CCritSec *m_pLock;
 	HRESULT m_hr;
 
@@ -80,7 +80,7 @@ class MyCapFilter : public CBaseFilter
 public:
 
 	// Constructor
-	MyCapFilter(access_sys_t *psys,
+	MyCapVideoFilter(access_sys_t *psys,
 		LPUNKNOWN pUnk,
 		CCritSec *pLock,
 		HRESULT *phr);
