@@ -52,6 +52,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBCAPTURE_EXPORTS;FILTER_DLL;USING_UV_SHARED;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\common;..\include\baseclasses;..\include;..\include\x264;..\include\ffmpeg;..\include\sdl</AdditionalIncludeDirectories>
+      <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -97,12 +98,13 @@
     <ClInclude Include="..\common\css_stream.h" />
     <ClInclude Include="..\common\css_util.h" />
     <ClInclude Include="aacencode.h" />
+    <ClInclude Include="CaptureSys.h" />
     <ClInclude Include="decode_audio.h" />
     <ClInclude Include="decode_video.h" />
-    <ClInclude Include="ICapture.h" />
+    <ClInclude Include="DshowCapture.h" />
     <ClInclude Include="IFilter.h" />
     <ClInclude Include="libcapture.h" />
-    <ClInclude Include="msgsock.h" />
+    <ClInclude Include="MsgSocket.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="x264encode.h" />
@@ -114,6 +116,7 @@
     <ClCompile Include="..\common\css_stream.c" />
     <ClCompile Include="..\common\css_util.c" />
     <ClCompile Include="aacencod.cpp" />
+    <ClCompile Include="CaptureSys.cpp" />
     <ClCompile Include="decode_audio.cpp" />
     <ClCompile Include="decode_video.cpp" />
     <ClCompile Include="dllmain.cpp">
@@ -124,10 +127,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="ICapture.cpp" />
+    <ClCompile Include="DshowCapture.cpp" />
     <ClCompile Include="IFilter.cpp" />
     <ClCompile Include="libcapture.cpp" />
-    <ClCompile Include="msgsock.cpp" />
+    <ClCompile Include="MsgSocket.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

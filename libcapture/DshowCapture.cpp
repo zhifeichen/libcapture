@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "ICapture.h"
+#include "DshowCapture.h"
 #include <stdio.h>
 
 
@@ -15,8 +15,8 @@
 {Msg(TEXT("FAILED(hr=0x%x) in ") TEXT(#x) TEXT("\n\0"), hr); return hr; }
 
 
-access_sys_t::access_sys_t(uv_loop_t* loop):
-m_msgsock(NULL), p_loop(loop),
+CAccessSys::CAccessSys(uv_loop_t* loop):
+p_loop(loop),
 p_graph(NULL), p_capture_graph_builder2(NULL), p_control(NULL),
 p_video_window(NULL), p_media_event(NULL), p_VSC(NULL),
 h_wnd(NULL),
@@ -25,13 +25,18 @@ i_width(0), i_height(0),
 i_chroma(false), b_getInterfaces(false), b_buildPreview(false), b_buildCapture(false),
 b_savefile(false), b_sendsample(false),
 e_psCurrent(Stopped),
-m_remote(NULL)
+p_VideoFilter(NULL), p_AudioFilter(NULL)
 {
-	memset(&m_userinfo, 0, sizeof(cc_userinfo_t));
 	memset(&p_streams, 0, sizeof(dshow_stream_t)* 2);
 }
 
-void access_sys_t::Msg(TCHAR *szFormat, ...)
+CAccessSys::~CAccessSys(void)
+{
+    if (e_psCurrent == Running) StopPreview();
+    CloseInterfaces();
+}
+
+void CAccessSys::Msg(TCHAR *szFormat, ...)
 {
 	TCHAR str[MAX_PATH];
 	va_list args;
@@ -41,7 +46,7 @@ void access_sys_t::Msg(TCHAR *szFormat, ...)
 	MessageBox(NULL, str, TEXT("CAPTURE"), MB_OK);
 }
 
-HRESULT access_sys_t::GetInterfaces(void)
+HRESULT CAccessSys::GetInterfaces(void)
 {
 	HRESULT hr = S_OK;
 	IBaseFilter *pSrcFilter = NULL;
@@ -133,7 +138,7 @@ HRESULT access_sys_t::GetInterfaces(void)
 	return hr;
 }
 
-void access_sys_t::CloseInterfaces(void)
+void CAccessSys::CloseInterfaces(void)
 {
 	// Stop previewing data
 	if (p_control)
@@ -172,7 +177,7 @@ void access_sys_t::CloseInterfaces(void)
 	b_getInterfaces = false;
 }
 
-HRESULT access_sys_t::FindCaptureDevice(void)
+HRESULT CAccessSys::FindCaptureDevice(void)
 {
 	HRESULT hr = S_OK;
 	IBaseFilter * pSrc = NULL;
@@ -368,7 +373,7 @@ HRESULT access_sys_t::FindCaptureDevice(void)
 	return hr;
 }
 
-HRESULT access_sys_t::BuildPreview(void)
+HRESULT CAccessSys::BuildPreview(void)
 {
 	HRESULT hr;
 	IBaseFilter *pSrcFilter = NULL;
@@ -450,8 +455,9 @@ HRESULT access_sys_t::BuildPreview(void)
 	//	RELEASE(ep);
 	//}
 
-	//pSrcFilter = p_streams[1].p_device_filter;
-	//
+	pSrcFilter = p_streams[1].p_device_filter;
+	
+    // do not render local audio
 	//hr = p_capture_graph_builder2->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Audio,
 	//	pSrcFilter, NULL, NULL);
 	//if (FAILED(hr))
@@ -462,6 +468,27 @@ HRESULT access_sys_t::BuildPreview(void)
 	//	pSrcFilter->Release();
 	//	return hr;
 	//}
+
+    {
+        IEnumPins *ep;
+        IPin *pin = NULL;
+
+        IAMBufferNegotiation *buffer_negotiation = NULL;
+        ALLOCATOR_PROPERTIES props = { -1, -1, -1, -1 };
+
+        pSrcFilter->EnumPins(&ep);
+        ep->Reset();
+        while (SUCCEEDED(hr = ep->Next(1, &pin, 0)) && hr != S_FALSE){
+            if (pin->QueryInterface(IID_IAMBufferNegotiation, (void **)&buffer_negotiation) == S_OK){
+                buffer_negotiation->GetAllocatorProperties(&props);
+                props.cbBuffer = 4096; // set to 4096 byte: acc encode frame length
+                buffer_negotiation->SuggestAllocatorProperties(&props);
+                RELEASE(buffer_negotiation);
+            }
+            RELEASE(pin);
+        }
+        RELEASE(ep);
+    }
 
 	//{
 	//	IEnumPins *ep;
@@ -520,7 +547,7 @@ HRESULT access_sys_t::BuildPreview(void)
 	return hr;
 }
 
-HRESULT access_sys_t::StartPreview(HWND h)
+HRESULT CAccessSys::StartPreview(HWND h)
 {
 	HRESULT hr;
 	IBaseFilter *pSrcFilter = NULL;
@@ -533,9 +560,7 @@ HRESULT access_sys_t::StartPreview(HWND h)
 	if (FAILED(hr)){
 		return hr;
 	}
-	if (h){
-		h_wnd = h;
-	}
+	
 	//// Get DirectShow interfaces
 	//hr = GetInterfaces();
 	//if (FAILED(hr))
@@ -624,12 +649,16 @@ HRESULT access_sys_t::StartPreview(HWND h)
 	//pSrcFilter->Release();
 
 	// Set video window style and position
-	hr = SetupVideoWindow(h_wnd);
-	if (FAILED(hr))
-	{
-		Msg(TEXT("Couldn't initialize video window!  hr=0x%x"), hr);
-		return hr;
-	}
+    if (h){
+        h_wnd = h;
+
+        hr = SetupVideoWindow(h_wnd);
+        if (FAILED(hr))
+        {
+            Msg(TEXT("Couldn't initialize video window!  hr=0x%x"), hr);
+            return hr;
+        }
+    }
 
 #ifdef REGISTER_FILTERGRAPH
 	// Add our graph to the running object table, which will allow
@@ -653,11 +682,11 @@ HRESULT access_sys_t::StartPreview(HWND h)
 
 	// Remember current state
 	e_psCurrent = Running;
-	ConnectToServer(m_userinfo.ip, m_userinfo.port);
+	//ConnectToServer(m_userinfo.ip, m_userinfo.port);
 	return S_OK;
 }
 
-HRESULT access_sys_t::StopPreview(void)
+HRESULT CAccessSys::StopPreview(void)
 {
 	HRESULT hr = S_OK;
 	// Stop previewing data
@@ -685,7 +714,7 @@ HRESULT access_sys_t::StopPreview(void)
 	return hr;
 }
 
-HRESULT access_sys_t::BuildCapture(void)
+HRESULT CAccessSys::BuildCapture(void)
 {
 	HRESULT hr;
 	IBaseFilter *pSrcFilter = NULL;
@@ -708,10 +737,10 @@ HRESULT access_sys_t::BuildCapture(void)
 
 	// Render the preview pin on the video capture filter
 	// Use this instead of g_pGraph->RenderFile
-	MyCapVideoFilter *myfilter = new MyCapVideoFilter(this, NULL, &m_lock, NULL);
-	hr = p_graph->AddFilter(myfilter, L"video filter");
+	p_VideoFilter = new CMyCapVideoFilter(this, NULL, &m_lock, NULL);
+    hr = p_graph->AddFilter(p_VideoFilter, L"video filter");
 	hr = p_capture_graph_builder2->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video,
-		pSrcFilter, NULL, myfilter);
+                                                pSrcFilter, NULL, p_VideoFilter);
 	if (FAILED(hr))
 	{
 		Msg(TEXT("Couldn't render the video capture stream to my filter.  hr=0x%x\r\n")
@@ -723,10 +752,11 @@ HRESULT access_sys_t::BuildCapture(void)
 
 	pSrcFilter = p_streams[1].p_device_filter;
 
-	CMyCapAudioFilter *myAudiofilter = new CMyCapAudioFilter(this, NULL, &m_alock, NULL);
-	hr = p_graph->AddFilter(myAudiofilter, L"audio filter");
+	p_AudioFilter = new CMyCapAudioFilter(this, NULL, &m_alock, NULL);
+    hr = p_graph->AddFilter(p_AudioFilter, L"audio filter");
 	hr = p_capture_graph_builder2->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Audio,
-		pSrcFilter, NULL, myAudiofilter);
+                                                pSrcFilter, NULL, p_AudioFilter);
+
 	if (FAILED(hr))
 	{
 		Msg(TEXT("Couldn't render the audio capture stream to my audio filter.  hr=0x%x\r\n")
@@ -735,11 +765,20 @@ HRESULT access_sys_t::BuildCapture(void)
 		pSrcFilter->Release();
 		return hr;
 	}
+    b_buildCapture = true;
 	return S_OK;
 }
 
+int CAccessSys::SetRawFrameCallback(RawFrameCallBack cb, void* data)
+{
+    if (!b_buildCapture) return -1;
+    if (p_VideoFilter) p_VideoFilter->SetRawFrameCallBack(cb, data);
+    if (p_AudioFilter) p_AudioFilter->SetRawFrameCallBack(cb, data);
+    return 0;
+}
 
-//HRESULT access_sys_t::BuildCapture(void)
+
+//HRESULT CAccessSys::BuildCapture(void)
 //{
 //	HRESULT hr;
 //	IBaseFilter *pSrcFilter = NULL;
@@ -876,7 +915,7 @@ HRESULT access_sys_t::BuildCapture(void)
 //		return hr;
 //	}
 //
-//	MyCapVideoFilter *myfilter = new MyCapVideoFilter(this, NULL, &m_lock, NULL);
+//	CMyCapVideoFilter *myfilter = new CMyCapVideoFilter(this, NULL, &m_lock, NULL);
 //	hr = p_graph->AddFilter(myfilter, L"file filter");
 //
 //	// Render the preview pin on the audio capture filter
@@ -926,7 +965,7 @@ HRESULT access_sys_t::BuildCapture(void)
 //}
 
 
-HRESULT access_sys_t::StartCapture(void)
+HRESULT CAccessSys::StartCapture(void)
 {
 	HRESULT hr;
 	IBaseFilter *pSrcFilter = NULL;
@@ -963,19 +1002,27 @@ HRESULT access_sys_t::StartCapture(void)
 
 	// Remember current state
 	e_psCurrent = Running;
-	m_remote = new remote_sys_t(p_loop);
+	//m_remote = new CRemoteSys(p_loop);
 	//Msg(TEXT("StartCapture success"));
 	return S_OK;
 }
 
-HRESULT access_sys_t::StopCapture(void)
+HRESULT CAccessSys::StopCapture(void)
 {
 	HRESULT hr;
 	// Stop previewing data
-	if (p_control)
-		hr = p_control->StopWhenReady();
+    if (p_control){
+        //hr = p_control->StopWhenReady();
+        hr = p_control->Stop();
+    }
 
 	e_psCurrent = Stopped;
+
+    hr = p_graph->RemoveFilter(p_VideoFilter);
+    hr = p_graph->RemoveFilter(p_AudioFilter);
+    p_VideoFilter = NULL;
+    p_AudioFilter = NULL;
+    b_buildCapture = false;
 
 	// Stop receiving events
 	//if (p_media_event)
@@ -993,17 +1040,7 @@ HRESULT access_sys_t::StopCapture(void)
 	return hr;
 }
 
-HRESULT access_sys_t::StartRemotePreview(int userid, HWND h)
-{
-	return m_remote->StartRemotePreview(userid, h);
-}
-
-HRESULT access_sys_t::StopRemotePreview(void)
-{
-	return m_remote ? m_remote->StopRemotePreview() : S_OK;
-}
-
-HRESULT access_sys_t::SetupVideoWindow(HWND h)
+HRESULT CAccessSys::SetupVideoWindow(HWND h)
 {
 	HRESULT hr;
 
@@ -1033,7 +1070,7 @@ HRESULT access_sys_t::SetupVideoWindow(HWND h)
 	return hr;
 }
 
-void access_sys_t::ResizeVideoWindow(HWND h)
+void CAccessSys::ResizeVideoWindow(HWND h)
 {
 	if (p_video_window)
 	{
@@ -1045,7 +1082,7 @@ void access_sys_t::ResizeVideoWindow(HWND h)
 	}
 }
 
-HRESULT access_sys_t::HandleGraphEvent(void)
+HRESULT CAccessSys::HandleGraphEvent(void)
 {
 	LONG evCode;
 	LONG_PTR evParam1, evParam2;
@@ -1069,62 +1106,16 @@ HRESULT access_sys_t::HandleGraphEvent(void)
 	return hr;
 }
 
-static void work_connect(uv_work_t* req)
-{}
-
-static void after_work_connect(uv_work_t* req, int status)
-{
-	access_sys_t* sys = (access_sys_t*)req->data;
-	sys->m_msgsock->connect_sever(sys->m_userinfo.ip, sys->m_userinfo.port);
-	delete req;
-}
-
-int access_sys_t::ConnectToServer(char* ip, uint16_t port)
-{
-	if (m_msgsock){
-		m_msgsock->dis_connect(true);
-		m_msgsock = NULL;
-	}
-	m_msgsock = new msgsock(p_loop, this);
-	if (!m_msgsock){
-		return -1;
-	}
-    m_msgsock->set_local_user(&m_userinfo);
-    m_msgsock->on_received_frame(this, do_received_frame);
-	uv_work_t* req = new uv_work_t();
-	req->data = this;
-	int ret = uv_queue_work(p_loop, req, work_connect, after_work_connect);
-	return ret;
-	return m_msgsock->connect_sever(ip, port);
-}
-
-int access_sys_t::DisconnectToServer(void)
-{
-	if (m_msgsock){
-		m_msgsock->dis_connect(true);
-		m_msgsock = NULL;
-	}
-	return 0;
-}
-
-void access_sys_t::do_received_frame(cc_src_sample_t* frame, void* userdata)
-{
-    access_sys_t* sys = (access_sys_t*)userdata;
-    if (sys->m_remote){
-        sys->m_remote->putframe(frame);
-    }
-}
-
 
 /* remote sys */
 
-remote_sys_t::remote_sys_t(uv_loop_t* loop) :
+CRemoteSys::CRemoteSys(uv_loop_t* loop) :
 h_wnd(NULL),
 b_has_interface(false),
 p_loop(loop)
 {}
 
-void remote_sys_t::Msg(TCHAR *szFormat, ...)
+void CRemoteSys::Msg(TCHAR *szFormat, ...)
 {
 	TCHAR str[MAX_PATH];
 	va_list args;
@@ -1134,7 +1125,7 @@ void remote_sys_t::Msg(TCHAR *szFormat, ...)
 	MessageBox(NULL, str, TEXT("CAPTURE"), MB_OK);
 }
 
-void remote_sys_t::ResizeVideoWindow(HWND h)
+void CRemoteSys::ResizeVideoWindow(HWND h)
 {
 	if (h_wnd)
 	{
@@ -1147,7 +1138,7 @@ void remote_sys_t::ResizeVideoWindow(HWND h)
 	}
 }
 
-HRESULT remote_sys_t::StartRemotePreview(int userid, HWND h)
+HRESULT CRemoteSys::StartRemotePreview(int userid, HWND h)
 {
 	HRESULT hr = S_OK;
 	if (h)
@@ -1159,7 +1150,7 @@ HRESULT remote_sys_t::StartRemotePreview(int userid, HWND h)
 	return hr;
 }
 
-HRESULT remote_sys_t::StopRemotePreview(void)
+HRESULT CRemoteSys::StopRemotePreview(void)
 {
 	HRESULT hr = S_OK;
 	vdecoder.stop();
@@ -1167,7 +1158,7 @@ HRESULT remote_sys_t::StopRemotePreview(void)
 	return hr;
 }
 
-void remote_sys_t::putframe(cc_src_sample_t* frame)
+void CRemoteSys::putframe(cc_src_sample_t* frame)
 {
 	//decoder.put(msg->body.sample);
     if (frame->sampletype == SAMPLEVIDEO)
@@ -1187,18 +1178,18 @@ remote_map::~remote_map()
 
 int remote_map::set(int userid, uv_loop_t* loop)
 {
-	remote_sys_t* r = get(userid);
+	CRemoteSys* r = get(userid);
 	if (r) return 0;
-	r = new remote_sys_t(loop);
+	r = new CRemoteSys(loop);
 	if (!r)
 		return -1;
 	m_remote.insert({ userid, r });
 	return 0;
 }
 
-remote_sys_t* remote_map::get(int userid)
+CRemoteSys* remote_map::get(int userid)
 {
-	remote_sys_t* r = NULL;
+	CRemoteSys* r = NULL;
 	rIt it = m_remote.find(userid);
 	if (it == m_remote.end()){
 		return r;
@@ -1212,7 +1203,7 @@ remote_sys_t* remote_map::get(int userid)
 int remote_map::remove(int userid)
 {
 	int ret = -1;
-	remote_sys_t* r = NULL;
+	CRemoteSys* r = NULL;
 	rIt it = m_remote.find(userid);
 	if (it == m_remote.end()){
 		return 0;

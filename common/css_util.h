@@ -30,30 +30,30 @@ extern "C" {
 # define close _close
 # define snprintf _snprintf
 # define vsnprintf _vsnprintf
+#include <time.h>
+int gettimeofday(struct timeval *tp, void* /*NULL*/);
+#define GETLASTERROR GetLastError()
+#define MKDIR(path) _mkdir(path)
+#define ITOA(x,y,z) _itoa((x),(y),(z))
+#define ATOLL(x) _atoi64(x)
+#define ACCESS(x,y) _access((x),(y))
 #else
 # include <unistd.h> /* unlink, rmdir, etc. */
 # define Sleep(T) sleep((T)/1000)
 # ifndef O_BINARY
 #  define O_BINARY 0
 # endif
-#endif
-
-#ifndef MAX_PATH
-# define MAX_PATH 256
-#endif
-
-#ifdef _WIN32
-#include <time.h>
-int gettimeofday(struct timeval *tp, void* /*NULL*/);
-#define GETLASTERROR GetLastError()
-#define MKDIR(path) _mkdir(path)
-#define ITOA(x,y,z) _itoa((x),(y),(z))
-#else
 #include <sys/time.h>
 #define MKDIR(path) mkdir((path),0755)
 #define GETLASTERROR errno
 char* itoa(int value, char *string, int radix);
 #define ITOA(x,y,z) itoa((x),(y),(z))
+#define ATOLL(x) atoll(x)
+#define ACCESS(x,y) access((x),(y))
+#endif // _WIN32
+
+#ifndef MAX_PATH
+# define MAX_PATH 256
 #endif
 
 #define FREE(x)										\
@@ -83,14 +83,6 @@ char* itoa(int value, char *string, int radix);
 #define CHECK_NULL_TO_RETURN(x, ret) if((x)==NULL){return ret;}
 
 #define CHECK_FALSE_TO_BREAK(x) if((x)!=0) break
-
-#ifdef _WIN32
-#define ATOLL(x) _atoi64(x)
-#define ACCESS(x,y) _access((x),(y))
-#else
-#define ATOLL(x) atoll(x)
-#define ACCESS(x,y) access((x),(y))
-#endif // _WIN32
 
 typedef struct sv_time_s
 {

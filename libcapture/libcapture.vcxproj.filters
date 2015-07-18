@@ -27,13 +27,7 @@
     <ClInclude Include="libcapture.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ICapture.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="IFilter.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="msgsock.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="x264encode.h">
@@ -66,6 +60,15 @@
     <ClInclude Include="..\common\css_logger.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="DshowCapture.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureSys.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MsgSocket.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -77,13 +80,7 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ICapture.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="IFilter.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="msgsock.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="x264encode.cpp">
@@ -111,6 +108,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\common\css_logger.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DshowCapture.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CaptureSys.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MsgSocket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

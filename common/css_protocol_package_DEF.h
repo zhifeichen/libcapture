@@ -571,6 +571,7 @@ PDU_(JMedia_sample,
 cc_media_sample,
 0x0f000010,
 PACKET_HEADER_
+Int32_(UserId)
 Int32_(FrameType)
 ByteArray_(FrameData, This->I_CmdLen - 24)
 )

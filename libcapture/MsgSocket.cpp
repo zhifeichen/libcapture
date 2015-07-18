@@ -1,13 +1,13 @@
 #include "stdafx.h"
-#include "msgsock.h"
+#include "MsgSocket.h"
 #include "css_protocol_package.h"
 #include "css_logger.h"
-#include "ICapture.h"
+#include "DshowCapture.h"
 
 
-void msgsock::conn_cb(css_stream_t* stream, int status)
+void CMsgSocket::conn_cb(css_stream_t* stream, int status)
 {
-	msgsock* s = (msgsock*)stream->data;
+	CMsgSocket* s = (CMsgSocket*)stream->data;
     printf("conn_cb status: %d\n", status);
 	if (status < 0){
 		s->stat = close;
@@ -33,9 +33,9 @@ void msgsock::conn_cb(css_stream_t* stream, int status)
 	}
 }
 
-void msgsock::close_cb(css_stream_t* stream)
+void CMsgSocket::close_cb(css_stream_t* stream)
 {
-	msgsock* s = (msgsock*)stream->data;
+	CMsgSocket* s = (CMsgSocket*)stream->data;
     s->stream_ = NULL;
 	s->stat = close;
 	if (s->delete_when_close_){
@@ -43,9 +43,9 @@ void msgsock::close_cb(css_stream_t* stream)
 	}
 }
 
-void msgsock::read_cb(css_stream_t* stream, char* package, ssize_t status)
+void CMsgSocket::read_cb(css_stream_t* stream, char* package, ssize_t status)
 {
-	msgsock* s = (msgsock*)stream->data;
+	CMsgSocket* s = (CMsgSocket*)stream->data;
 	JNetCmd_Header header;
 	if (status < 0){
 		if (package) free(package);
@@ -73,27 +73,27 @@ void msgsock::read_cb(css_stream_t* stream, char* package, ssize_t status)
 	}
 }
 
-//void msgsock::alloc_cb(uv_handle_t* h, size_t suggested_size, uv_buf_t* buf)
+//void CMsgSocket::alloc_cb(uv_handle_t* h, size_t suggested_size, uv_buf_t* buf)
 //{
-//	msgsock* s = (msgsock*)h->data;
+//	CMsgSocket* s = (CMsgSocket*)h->data;
 //	buf->base = (char*)malloc(1024 * 100);
 //	buf->len = 1024 * 100;
 //}
 
-//void msgsock::sendsample_cb(css_write_req_t* req, int status)
+//void CMsgSocket::sendsample_cb(css_write_req_t* req, int status)
 //{
 //	IMediaSample* s = (IMediaSample*)req->data;
 //	s->Release();
 //	free(req);
 //}
 
-void msgsock::send_cb(css_write_req_t* req, int status)
+void CMsgSocket::send_cb(css_write_req_t* req, int status)
 {
 	FREE(req->buf.base)
 	FREE(req)
 }
 
-msgsock::msgsock(uv_loop_t* loop, struct access_sys_t* accs) :
+CMsgSocket::CMsgSocket(uv_loop_t* loop) :
 loop_(loop),
 receive_cb_(NULL),
 msgcb_userdata_(NULL),
@@ -113,10 +113,10 @@ stream_(NULL)
 	}
 }
 
-msgsock::~msgsock(void)
+CMsgSocket::~CMsgSocket(void)
 {}
 
-int msgsock::connect_sever(char* ip, uint16_t port)
+int CMsgSocket::connect_sever(char* ip, uint16_t port)
 {
 	int ret = 0;
 	if (stat == connected){
@@ -137,7 +137,7 @@ int msgsock::connect_sever(char* ip, uint16_t port)
 	return ret;
 }
 
-int msgsock::dis_connect(bool bDelete)
+int CMsgSocket::dis_connect(bool bDelete)
 {
 	int ret = 0;
 	if (stat == close){
@@ -153,7 +153,7 @@ int msgsock::dis_connect(bool bDelete)
 	return ret;
 }
 
-int msgsock::send(uint8_t* buf, uint32_t len)
+int CMsgSocket::send(uint8_t* buf, uint32_t len)
 {
 	int ret = 0;
 	css_write_req_t* req_wr = (css_write_req_t*)malloc(sizeof(css_write_req_t));
@@ -172,7 +172,7 @@ int msgsock::send(uint8_t* buf, uint32_t len)
 	return ret;
 }
 
-//int msgsock::send(IMediaSample* sample)
+//int CMsgSocket::send(IMediaSample* sample)
 //{
 //	int ret = 0;
 //	uv_write_t* req_wr = (uv_write_t*)malloc(sizeof(uv_write_t));
@@ -190,7 +190,7 @@ int msgsock::send(uint8_t* buf, uint32_t len)
 //	return ret;
 //}
 
-int msgsock::on_received(void* userdata, void(*cb)(MyMSG*, void*))
+int CMsgSocket::on_received(void* userdata, void(*cb)(MyMSG*, void*))
 {
 	int ret = 0;
 	receive_cb_ = cb;
@@ -198,7 +198,7 @@ int msgsock::on_received(void* userdata, void(*cb)(MyMSG*, void*))
 	return ret;
 }
 
-int msgsock::on_received_frame(void* userdata, void(*cb)(cc_src_sample_t*, void* userdata))
+int CMsgSocket::on_received_frame(void* userdata, void(*cb)(int, cc_src_sample_t*, void* userdata))
 {
     int ret = 0;
     receive_frame_cb_ = cb;
@@ -206,7 +206,7 @@ int msgsock::on_received_frame(void* userdata, void(*cb)(cc_src_sample_t*, void*
     return ret;
 }
 
-int msgsock::set_local_user(cc_userinfo_t* user)
+int CMsgSocket::set_local_user(cc_userinfo_t* user)
 {
     local_user_.roomid = user->roomid;
     local_user_.userid = user->userid;
@@ -215,7 +215,7 @@ int msgsock::set_local_user(cc_userinfo_t* user)
     return 0;
 }
 
-int msgsock::set_loop(uv_loop_t* loop)
+int CMsgSocket::set_loop(uv_loop_t* loop)
 {
 	loop_ = loop;
 	if (loop_){ 
@@ -226,7 +226,7 @@ int msgsock::set_loop(uv_loop_t* loop)
 	return 0;
 }
 
-void msgsock::do_preview_frame(css_stream_t* stream, char* package, ssize_t status)
+void CMsgSocket::do_preview_frame(css_stream_t* stream, char* package, ssize_t status)
 {
 	MyMSG msg;
 	int ret = 0;
@@ -244,12 +244,12 @@ void msgsock::do_preview_frame(css_stream_t* stream, char* package, ssize_t stat
 	msg.code = resp.FrameType;
 
     if (receive_frame_cb_){
-        receive_frame_cb_(&msg.body.sample, framecb_userdata_);
+        receive_frame_cb_(resp.UserId, &msg.body.sample, framecb_userdata_);
     }
 	free(package); /* can free anyway */
 }
 
-void msgsock::do_start_send_frame(css_stream_t* stream, char* package, ssize_t status)
+void CMsgSocket::do_start_send_frame(css_stream_t* stream, char* package, ssize_t status)
 {
 	MyMSG msg;
 	int ret = 0;
@@ -275,7 +275,7 @@ void msgsock::do_start_send_frame(css_stream_t* stream, char* package, ssize_t s
 	//accs_->b_sendsample = true;
 }
 
-void msgsock::do_user_login(css_stream_t* stream, char* package, ssize_t status)
+void CMsgSocket::do_user_login(css_stream_t* stream, char* package, ssize_t status)
 {
 	MyMSG msg;
 	int ret = 0;
@@ -304,7 +304,7 @@ void msgsock::do_user_login(css_stream_t* stream, char* package, ssize_t status)
 	}
 }
 
-void msgsock::do_user_logout(css_stream_t* stream, char* package, ssize_t status)
+void CMsgSocket::do_user_logout(css_stream_t* stream, char* package, ssize_t status)
 {
 	MyMSG msg;
 	int ret = 0;
@@ -324,7 +324,7 @@ void msgsock::do_user_logout(css_stream_t* stream, char* package, ssize_t status
 		receive_cb_(&msg, msgcb_userdata_);
 }
 
-int msgsock::send_user_info(void)
+int CMsgSocket::send_user_info(void)
 {
 	JUser_Login_Info info;
 	JUser_Login_Info_init(&info);
@@ -360,7 +360,7 @@ int msgsock::send_user_info(void)
 	return 0;
 }
 
-int msgsock::send_start_frame(void)
+int CMsgSocket::send_start_frame(void)
 {
 	JStart_Send_Frame ssf;
 	JStart_Send_Frame_init(&ssf);

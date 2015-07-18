@@ -64,6 +64,7 @@ int aacenc::open()
 	m_pFrame->nb_samples = m_pCodecCtx->frame_size;
 	m_pFrame->format = m_pCodecCtx->sample_fmt;
 
+    // 4096 byte
 	i_frame_size = av_samples_get_buffer_size(NULL, m_pCodecCtx->channels, m_pCodecCtx->frame_size, m_pCodecCtx->sample_fmt, 1);
 	frame_buf = (uint8_t *)av_malloc(i_frame_size);
 	avcodec_fill_audio_frame(m_pFrame, m_pCodecCtx->channels, m_pCodecCtx->sample_fmt, (const uint8_t*)frame_buf, i_frame_size, 1);

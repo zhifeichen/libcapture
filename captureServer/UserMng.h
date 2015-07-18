@@ -86,10 +86,9 @@ private:
 	UserRoom* FindRoom(int roomid);
 };
 
-extern "C" {
-	int AddUser(int id, int roomid, css_stream_t* stream);
-	int RemoveUser(int id);
-	int DispatchUserData(css_stream_t* stream, char* buf, int len);
-}
+int AddUser(int id, int roomid, css_stream_t* stream);
+int RemoveUser(int id);
+int DispatchUserData(css_stream_t* stream, char* buf, int len);
+
 
 #endif

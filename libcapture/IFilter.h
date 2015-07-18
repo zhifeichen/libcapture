@@ -3,11 +3,13 @@
 
 #include <dshow.h>
 #include "Streams.h"
-#include "ICapture.h"
 #include <deque>
-#include "uv/uv.h"
 #include <Dvdmedia.h>
+
+extern "C" {
+#include "uv/uv.h"
 #include <libswscale/swscale.h>
+}
 
 #include "x264encode.h"
 #include "aacencode.h"
@@ -25,15 +27,19 @@ DEFINE_GUID(CLSID_CMyCapAudioFilter,
 DEFINE_GUID(CLSID_PushSourceFilter,
 	0x7d732dc9, 0x5770, 0x4d20, 0x90, 0x90, 0x14, 0x42, 0x99, 0x0, 0x99, 0x2c);
 
-class MyCapVideoFilter;
-//  Pin object
+typedef void(*RawFrameCallBack)(cc_src_sample_t*, void* userdata);
 
+class CAccessSys;
+
+class CMyCapVideoFilter;
+
+//  Pin object
 class CMyCapVideoInputPin : public CRenderedInputPin
 {
 	//CDump    * const m_pDump;           // Main renderer object
 	//CCritSec * const m_pReceiveLock;    // Sample critical section
 	REFERENCE_TIME m_tLast;             // Last sample receive time
-	MyCapVideoFilter* m_pfilter;
+	CMyCapVideoFilter* m_pfilter;
 	CMediaType m_mt;
 	enum AVPixelFormat m_pix_fmt;
 	int m_width, m_height;
@@ -43,7 +49,7 @@ class CMyCapVideoInputPin : public CRenderedInputPin
 	
 public:
 
-	CMyCapVideoInputPin(MyCapVideoFilter* pFilter);
+	CMyCapVideoInputPin(CMyCapVideoFilter* pFilter);
 
 	// Do something with this media sample
 	STDMETHODIMP Receive(IMediaSample *pSample);
@@ -67,20 +73,19 @@ public:
 		double dRate);
 };
 
-class MyCapVideoFilter : public CBaseFilter
+class CMyCapVideoFilter : public CBaseFilter
 {
 	friend class CMyCapVideoInputPin;
 	CMyCapVideoInputPin* m_pPin;
 	CCritSec *m_pLock;
 	HRESULT m_hr;
+    RawFrameCallBack m_cb;
+    void* m_userdata;
 
-	x264enc m_enc;
-
-	struct access_sys_t *m_psys;
 public:
 
 	// Constructor
-	MyCapVideoFilter(access_sys_t *psys,
+	CMyCapVideoFilter(CAccessSys *psys,
 		LPUNKNOWN pUnk,
 		CCritSec *pLock,
 		HRESULT *phr);
@@ -93,6 +98,8 @@ public:
 	STDMETHODIMP Run(REFERENCE_TIME tStart);
 	STDMETHODIMP Pause();
 	STDMETHODIMP Stop();
+
+    void SetRawFrameCallBack(RawFrameCallBack cb, void* mdata);
 
 private:
 	HANDLE m_hFile;
@@ -153,14 +160,13 @@ class CMyCapAudioFilter : public CBaseFilter
 	CMyCapAudioInputPin* m_pPin;
 	CCritSec *m_pLock;
 	HRESULT m_hr;
+    RawFrameCallBack m_cb;
+    void* m_userdata;
 
-	aacenc m_enc;
-
-	struct access_sys_t *m_psys;
 public:
 
 	// Constructor
-	CMyCapAudioFilter(access_sys_t *psys,
+	CMyCapAudioFilter(CAccessSys *psys,
 		LPUNKNOWN pUnk,
 		CCritSec *pLock,
 		HRESULT *phr);
@@ -173,6 +179,8 @@ public:
 	STDMETHODIMP Run(REFERENCE_TIME tStart);
 	STDMETHODIMP Pause();
 	STDMETHODIMP Stop();
+
+    void SetRawFrameCallBack(RawFrameCallBack cb, void* data);
 
 private:
 

@@ -1,4 +1,4 @@
-#include "msgsock.h"
+#include "MsgSocket.h"
 #include "css.h"
 #include "css_test.h"
 
@@ -13,14 +13,14 @@ static void do_nothing(uv_work_t* req)
 
 static void reconn(uv_work_t* req, int status)
 {
-    msgsock* s = (msgsock*)req->data;
+    CMsgSocket* s = (CMsgSocket*)req->data;
     printf("recconn s stat: %d\n", s->get_stat());
     int ret = s->connect_sever("127.0.0.1", 5566);
     printf("reconn return %d\n", ret);
     free(req);
 }
 
-static void do_newuser(MyMSG* msg, msgsock* s)
+static void do_newuser(MyMSG* msg, CMsgSocket* s)
 {
     printf("received new user: id: %d; room: %d\n", msg->body.userinfo.userid, msg->body.userinfo.roomid);
     s->dis_connect();
@@ -30,19 +30,19 @@ static void do_newuser(MyMSG* msg, msgsock* s)
     printf("queue reconn return %d\n", ret);
 }
 
-static void do_userlogout(MyMSG* msg, msgsock* s)
+static void do_userlogout(MyMSG* msg, CMsgSocket* s)
 {
     printf("received user %d logout\n", msg->body.userinfo.userid);
 }
 
-static void do_socket_error(MyMSG* msg, msgsock* s)
+static void do_socket_error(MyMSG* msg, CMsgSocket* s)
 {
     printf("received socket error\n");
 }
 
 static void on_msg(MyMSG* msg, void* userdata)
 {
-    msgsock* s = (msgsock*)userdata;
+    CMsgSocket* s = (CMsgSocket*)userdata;
     switch (msg->code){
     case CODE_NEWUSER:
         do_newuser(msg, s);
@@ -58,7 +58,7 @@ static void on_msg(MyMSG* msg, void* userdata)
     }
 }
 
-static void on_frame(cc_src_sample_t* frame, void* userdata)
+static void on_frame(int userid, cc_src_sample_t* frame, void* userdata)
 {}
 
 static void connect_cb(uv_connect_t* req, int status)
@@ -100,17 +100,17 @@ TEST_IMPL(msgsock)
     //    }
     //}
 
-    msgsock* s = new msgsock(loop, NULL);
+    CMsgSocket* s = new CMsgSocket(loop);
     s->set_local_user(&userinfo);
     s->on_received(s, on_msg);
     s->on_received_frame(s, on_frame);
 
-    msgsock* s2 = new msgsock(loop, NULL);
+    CMsgSocket* s2 = new CMsgSocket(loop);
     s2->set_local_user(&userinfo2);
     s2->on_received(s2, on_msg);
     s2->on_received_frame(s2, on_frame);
 
-    ret = s->connect_sever("192.168.1.101", 5566);
+    ret = s->connect_sever("127.0.0.1", 5566);
     printf("connect_sever return %d\n", ret);
     ret = s2->connect_sever("127.0.0.1", 5566);
     printf("connect_sever return %d\n", ret);

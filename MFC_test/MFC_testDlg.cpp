@@ -178,7 +178,7 @@ void CMFC_testDlg::OnBnClickedButton1()
 	info.roomid = 24;
 	startpreview(m_winShow.GetSafeHwnd(), 1, &info, 0, NULL);
 	setmsgcallback(this, OnMsg);
-	//startcapture(NULL, NULL, NULL);
+	startcapture(NULL, NULL, NULL);
 	//setmsgcallback(0, msg_cb);
 	//startpreview(m_winShow.GetSafeHwnd(), 1, 0, NULL);
 	//startremotepreview("192.168.1.101", 0, 0, 0);
@@ -188,7 +188,8 @@ void CMFC_testDlg::OnBnClickedButton1()
 void CMFC_testDlg::OnBnClickedButton2()
 {
 	// TODO:  在此添加控件通知处理程序代码
-	stoppreview(NULL, NULL);
+    stopcaptrue(NULL, NULL);
+	//stoppreview(NULL, NULL);
 	//stopremotepreview(1, 0, 0);
 	//resizewindow();
 	//stopsendsample(0, 0);

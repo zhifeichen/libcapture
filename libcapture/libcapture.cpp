@@ -3,19 +3,20 @@
 
 #include "stdafx.h"
 #include "libcapture.h"
-#include "ICapture.h"
+#include "DshowCapture.h"
 #include "uv/uv.h"
-#include "msgsock.h"
+#include "MsgSocket.h"
 #include "css_logger.h"
+#include "CaptureSys.h"
 
 static uv_loop_t g_loop;
 static uv_timer_t g_timer;
 static uv_thread_t g_loop_thread;
 static uv_async_t g_async;
 
-static access_sys_t* g_sys = NULL;
-//static remote_sys_t* g_remote;
-//static msgsock g_sock(&g_loop);
+static CCaptureSys* g_sys = NULL;
+//static CRemoteSys* g_remote;
+//static CMsgSocket g_sock(&g_loop);
 
 static void loop_thread(void* arg)
 {
@@ -34,8 +35,8 @@ static int uv_init(void)
 	ret = uv_timer_start(&g_timer, timer_fn, 10, 10);
 	ret = uv_thread_create(&g_loop_thread, loop_thread, NULL);
 	css_logger_init(&g_loop);
-	g_sys = new access_sys_t(&g_loop);
-	//g_remote = new remote_sys_t(&g_loop);
+    g_sys = new CCaptureSys(&g_loop);
+	//g_remote = new CRemoteSys(&g_loop);
 	//g_sys->m_msgsock.set_loop(&g_loop);
 	return ret;
 }
@@ -68,11 +69,7 @@ LIBCAPTURE_API  int finit(void)
 
 LIBCAPTURE_API  int startpreview(HWND hShow, int volume, cc_userinfo_t* info, void* userdata, FNCOMMCALLBACK cb)
 {
-	int ret;
-	g_sys->m_userinfo.userid = info->userid;
-	g_sys->m_userinfo.roomid = info->roomid;
-	g_sys->m_userinfo.port = info->port;
-	memcpy(g_sys->m_userinfo.ip, info->ip, 16);
+	g_sys->SetUserInfo(info);
 	//strcpy(g_sys->m_userinfo.ip, info->ip);
 	g_sys->StartPreview(hShow);
 	//ret = g_sys->ConnectToServer(info->ip, info->port);
@@ -88,7 +85,7 @@ LIBCAPTURE_API  int resizewindow(void)
 LIBCAPTURE_API  int stoppreview(void* userdata, FNCOMMCALLBACK cb)
 {
 	g_sys->StopPreview();
-	g_sys->CloseInterfaces();
+	//g_sys->CloseInterfaces();
 	return 0;
 }
 
@@ -96,7 +93,7 @@ LIBCAPTURE_API  int startremotepreview(int userid, HWND hShow, void* userdata, F
 {
 	//g_sys.m_msgsock.connect_sever("120.199.202.36", 5566);
 	//g_sys.m_msgsock.connect_sever("120.199.202.36", 5566);
-	g_sys->b_sendsample = true;
+	//g_sys->SendSample(true);
 
 	g_sys->StartRemotePreview(userid, hShow);
 	return 0;
@@ -104,28 +101,27 @@ LIBCAPTURE_API  int startremotepreview(int userid, HWND hShow, void* userdata, F
 
 LIBCAPTURE_API int resizeremotepreview(int userid, HWND hShow, void* userdata, FNCOMMCALLBACK cb)
 {
-	if (g_sys->m_remote)
-		g_sys->m_remote->ResizeVideoWindow(hShow);
-	return 0;
+    g_sys->ResizeRemoteVideoWindow(userid, hShow);
+    return 0;
 }
 
 LIBCAPTURE_API  int stopremotepreview(int userid, void* userdata, FNCOMMCALLBACK cb)
 {
-	g_sys->b_sendsample = false;
-	g_sys->StopRemotePreview();
+	//g_sys->SendSample(false);
+	g_sys->StopRemotePreview(userid);
 	g_sys->DisconnectToServer();
 	return 0;
 }
 
 LIBCAPTURE_API  int startsendsample(void* userdata, FNCOMMCALLBACK cb)
 {
-	g_sys->b_sendsample = true;
+	//g_sys->SendSample(true);
 	return 0;
 }
 
 LIBCAPTURE_API  int stopsendsample(void* userdata, FNCOMMCALLBACK cb)
 {
-	g_sys->b_sendsample = false;
+	//g_sys->SendSample(false);
 	return 0;
 }
 
@@ -143,8 +139,7 @@ LIBCAPTURE_API  int stopcaptrue(void* userdata, FNCOMMCALLBACK cb)
 
 LIBCAPTURE_API  int setmsgcallback(void* userdata, FNMSGCALLBACK cb)
 {
-	if (g_sys->m_msgsock)
-		g_sys->m_msgsock->on_received(userdata, cb);
+    g_sys->SetReceivedMsgCb(userdata, cb);
 	return 0;
 }
 

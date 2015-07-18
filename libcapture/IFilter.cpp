@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "IFilter.h"
+#include "DshowCapture.h"
 #include <initguid.h>
 #include "css_protocol_package.h"
 
@@ -19,24 +20,31 @@ DEFINE_GUID(CLSID_PushSourceFilter,
 
 // Constructor
 
-MyCapVideoFilter::MyCapVideoFilter(access_sys_t *psys,
+CMyCapVideoFilter::CMyCapVideoFilter(CAccessSys *psys,
 	LPUNKNOWN pUnk,
 	CCritSec *pLock,
 	HRESULT *phr) :
-	CBaseFilter(NAME("CDumpFilter"), pUnk, pLock, CLSID_MyCapVideoFilter),
+	CBaseFilter(NAME("CMyCapVideoFilter"), pUnk, pLock, CLSID_MyCapVideoFilter),
 	m_pLock(pLock),
 	m_hFile(INVALID_HANDLE_VALUE),
-	m_psys(psys),
-	m_enc(psys->p_loop)
+    m_cb(NULL), m_userdata(NULL)
 {
 	m_pPin = new CMyCapVideoInputPin(this);
 }
 
+// 
+// Set call back
+//
+void CMyCapVideoFilter::SetRawFrameCallBack(RawFrameCallBack cb, void* data)
+{
+    m_cb = cb;
+    m_userdata = data;
+}
 
 //
 // GetPin
 //
-CBasePin * MyCapVideoFilter::GetPin(int n)
+CBasePin * CMyCapVideoFilter::GetPin(int n)
 {
 	if (n == 0) {
 		return m_pPin;
@@ -50,7 +58,7 @@ CBasePin * MyCapVideoFilter::GetPin(int n)
 //
 // GetPinCount
 //
-int MyCapVideoFilter::GetPinCount()
+int CMyCapVideoFilter::GetPinCount()
 {
 	return 1;
 }
@@ -61,12 +69,12 @@ int MyCapVideoFilter::GetPinCount()
 //
 // Overriden to close the dump file
 //
-STDMETHODIMP MyCapVideoFilter::Stop()
+STDMETHODIMP CMyCapVideoFilter::Stop()
 {
 	CAutoLock cObjectLock(m_pLock);
 
 	CloseFile();
-	m_enc.stop_encode();
+	//m_enc.stop_encode();
 	return CBaseFilter::Stop();
 }
 
@@ -76,13 +84,13 @@ STDMETHODIMP MyCapVideoFilter::Stop()
 //
 // Overriden to open the dump file
 //
-STDMETHODIMP MyCapVideoFilter::Pause()
+STDMETHODIMP CMyCapVideoFilter::Pause()
 {
 	CAutoLock cObjectLock(m_pLock);
 
 	OpenFile();
-	m_enc.set_param();
-	m_enc.open();
+	//m_enc.set_param();
+	//m_enc.open();
 	return CBaseFilter::Pause();
 }
 
@@ -92,7 +100,7 @@ STDMETHODIMP MyCapVideoFilter::Pause()
 //
 // Overriden to open the dump file
 //
-STDMETHODIMP MyCapVideoFilter::Run(REFERENCE_TIME tStart)
+STDMETHODIMP CMyCapVideoFilter::Run(REFERENCE_TIME tStart)
 {
 	CAutoLock cObjectLock(m_pLock);
 
@@ -102,21 +110,21 @@ STDMETHODIMP MyCapVideoFilter::Run(REFERENCE_TIME tStart)
 	//
 	// Since we are restarting the graph, a new file will be created.
 	OpenFile();
-	m_enc.start_encode(enc_cb, this);
-	//MessageBox(NULL, TEXT("m_enc.start_encode(enc_cb, this);"), TEXT("MyCapVideoFilter"), MB_OK);
+	//m_enc.start_encode(enc_cb, this);
+	//MessageBox(NULL, TEXT("m_enc.start_encode(enc_cb, this);"), TEXT("CMyCapVideoFilter"), MB_OK);
 	return CBaseFilter::Run(tStart);
 }
 
 //
 // encode call back
 //
-void MyCapVideoFilter::enc_cb(cc_src_sample_t smple, void* data)
+void CMyCapVideoFilter::enc_cb(cc_src_sample_t smple, void* data)
 {
-	MyCapVideoFilter* f = (MyCapVideoFilter*)data;
+	CMyCapVideoFilter* f = (CMyCapVideoFilter*)data;
 	f->enc_cb(smple);
 }
 
-void MyCapVideoFilter::enc_cb(cc_src_sample_t smple)
+void CMyCapVideoFilter::enc_cb(cc_src_sample_t smple)
 {
 	//MyMSG msg;
 	//msg.bodylen = sizeof(msg.body.sample);
@@ -125,7 +133,7 @@ void MyCapVideoFilter::enc_cb(cc_src_sample_t smple)
 	//if (m_psys->m_msgsock.receive_cb_){
 	//	m_psys->m_msgsock.receive_cb_(&msg, m_psys->m_msgsock.msgcb_userdata_);
 	//}
-	if (m_psys->b_sendsample){
+	if (0){
 		JMedia_sample s;
 		ssize_t len = 0;
 		char *buf = NULL;
@@ -142,7 +150,7 @@ void MyCapVideoFilter::enc_cb(cc_src_sample_t smple)
 
 		css_proto_package_encode(buf, len, (JNetCmd_Header*)&s);
 
-		m_psys->m_msgsock->send((uint8_t*)buf, len);
+		//m_psys->MsgSocket()->send((uint8_t*)buf, len);
 	}
 }
 
@@ -151,7 +159,7 @@ void MyCapVideoFilter::enc_cb(cc_src_sample_t smple)
 //
 // Opens the file ready for dumping
 //
-HRESULT MyCapVideoFilter::OpenFile()
+HRESULT CMyCapVideoFilter::OpenFile()
 {
 	TCHAR *pFileName = TEXT("1.mpg");
 
@@ -211,7 +219,7 @@ HRESULT MyCapVideoFilter::OpenFile()
 //
 // Closes any dump file we have opened
 //
-HRESULT MyCapVideoFilter::CloseFile()
+HRESULT CMyCapVideoFilter::CloseFile()
 {
 	// Must lock this section to prevent problems related to
 	// closing the file while still receiving data in Receive()
@@ -232,7 +240,7 @@ HRESULT MyCapVideoFilter::CloseFile()
 //
 // Write raw data to the file
 //
-HRESULT MyCapVideoFilter::Write(PBYTE pbData, LONG lDataLength)
+HRESULT CMyCapVideoFilter::Write(PBYTE pbData, LONG lDataLength)
 {
 	DWORD dwWritten;
 
@@ -254,13 +262,13 @@ HRESULT MyCapVideoFilter::Write(PBYTE pbData, LONG lDataLength)
 //
 //  Definition of CDumpInputPin
 //
-CMyCapVideoInputPin::CMyCapVideoInputPin(MyCapVideoFilter* pFilter) :
+CMyCapVideoInputPin::CMyCapVideoInputPin(CMyCapVideoFilter* pFilter) :
 
 	CRenderedInputPin(NAME("CMyCapVideoInputPin"),
 	pFilter,                   // Filter
 	pFilter->m_pLock,          // Locking
 	&pFilter->m_hr,                       // Return code
-	L"Input"),                 // Pin name
+	L"CMyCapVideoInputPin"),                 // Pin name
 	//m_pReceiveLock(pReceiveLock),
 	m_pfilter(pFilter),
 	m_tLast(0),
@@ -450,7 +458,9 @@ STDMETHODIMP CMyCapVideoInputPin::Receive(IMediaSample *pSample)
 		avpicture_free((AVPicture*)&output_pic);
 		//memcpy(msg.body.sample.buf, pbData, msg.body.sample.len);
 		//m_pfilter->m_psys->m_msgsock.receive_cb_(&msg, m_pfilter->m_psys->m_msgsock.msgcb_userdata_);
-		m_pfilter->m_enc.put_sample(msg.body.sample);
+		//m_pfilter->m_enc.put_sample(msg.body.sample);
+        if (m_pfilter->m_cb)
+            m_pfilter->m_cb(&msg.body.sample, m_pfilter->m_userdata);
 		//MessageBox(NULL, TEXT("m_pfilter->m_enc.put_sample(msg.body.sample);"), TEXT("CMyCapVideoInputPin"), MB_OK);
 	}
 	return S_OK;
@@ -490,18 +500,25 @@ STDMETHODIMP CMyCapVideoInputPin::NewSegment(REFERENCE_TIME tStart,
 
 // Constructor
 
-CMyCapAudioFilter::CMyCapAudioFilter(access_sys_t *psys,
+CMyCapAudioFilter::CMyCapAudioFilter(CAccessSys *psys,
 	LPUNKNOWN pUnk,
 	CCritSec *pLock,
 	HRESULT *phr) :
-	CBaseFilter(NAME("CDumpFilter"), pUnk, pLock, CLSID_CMyCapAudioFilter),
+	CBaseFilter(NAME("CMyCapAudioFilter"), pUnk, pLock, CLSID_CMyCapAudioFilter),
 	m_pLock(pLock),
-	m_psys(psys),
-	m_enc(psys->p_loop)
+    m_cb(NULL), m_userdata(NULL)
 {
 	m_pPin = new CMyCapAudioInputPin(this);
 }
 
+// 
+// Set call back
+//
+void CMyCapAudioFilter::SetRawFrameCallBack(RawFrameCallBack cb, void* data)
+{
+    m_cb = cb;
+    m_userdata = data;
+}
 
 //
 // GetPin
@@ -535,7 +552,7 @@ STDMETHODIMP CMyCapAudioFilter::Stop()
 {
 	CAutoLock cObjectLock(m_pLock);
 
-	m_enc.stop_encode();
+	//m_enc.stop_encode();
 	return CBaseFilter::Stop();
 }
 
@@ -549,8 +566,8 @@ STDMETHODIMP CMyCapAudioFilter::Pause()
 {
 	CAutoLock cObjectLock(m_pLock);
 
-	m_enc.set_param(m_pPin->GetMediaType());
-	m_enc.open();
+	//m_enc.set_param(m_pPin->GetMediaType());
+	//m_enc.open();
 	return CBaseFilter::Pause();
 }
 
@@ -570,8 +587,8 @@ STDMETHODIMP CMyCapAudioFilter::Run(REFERENCE_TIME tStart)
 	//
 	// Since we are restarting the graph, a new file will be created.
 
-	m_enc.start_encode(enc_cb, this);
-	//MessageBox(NULL, TEXT("m_enc.start_encode(enc_cb, this);"), TEXT("MyCapVideoFilter"), MB_OK);
+	//m_enc.start_encode(enc_cb, this);
+	//MessageBox(NULL, TEXT("m_enc.start_encode(enc_cb, this);"), TEXT("CMyCapVideoFilter"), MB_OK);
 	return CBaseFilter::Run(tStart);
 }
 
@@ -593,7 +610,7 @@ void CMyCapAudioFilter::enc_cb(cc_src_sample_t smple)
 	//if (m_psys->m_msgsock.receive_cb_){
 	//	m_psys->m_msgsock.receive_cb_(&msg, m_psys->m_msgsock.msgcb_userdata_);
 	//}
-	if (m_psys->b_sendsample){
+	if (0){
 		JMedia_sample s;
 		ssize_t len = 0;
 		char *buf = NULL;
@@ -610,7 +627,7 @@ void CMyCapAudioFilter::enc_cb(cc_src_sample_t smple)
 
 		css_proto_package_encode(buf, len, (JNetCmd_Header*)&s);
 
-		m_psys->m_msgsock->send((uint8_t*)buf, len);
+		//m_psys->MsgSocket()->send((uint8_t*)buf, len);
 	}
 }
 
@@ -624,8 +641,8 @@ CMyCapAudioInputPin::CMyCapAudioInputPin(CMyCapAudioFilter* pFilter) :
 CRenderedInputPin(NAME("CMyCapVideoInputPin"),
 pFilter,                   // Filter
 pFilter->m_pLock,          // Locking
-&pFilter->m_hr,                       // Return code
-L"Input"),                 // Pin name
+&pFilter->m_hr,            // Return code
+L"CMyCapVideoInputPin"),   // Pin name
 //m_pReceiveLock(pReceiveLock),
 m_pfilter(pFilter),
 m_tLast(0),
@@ -743,7 +760,7 @@ STDMETHODIMP CMyCapAudioInputPin::Receive(IMediaSample *pSample)
 		//m_pfilter->m_psys->m_msgsock.send(pSample);
 		MyMSG msg;
 		msg.bodylen = sizeof(msg.body.sample);
-		msg.body.sample.len = pSample->GetActualDataLength();
+		msg.body.sample.len = pSample->GetActualDataLength();// default 88200 byte, set to 4096
 		msg.body.sample.buf[0] = (unsigned char*)malloc(msg.body.sample.len);
 		msg.body.sample.iplan = 1;
 		msg.code = 0;
@@ -781,7 +798,9 @@ STDMETHODIMP CMyCapAudioInputPin::Receive(IMediaSample *pSample)
 		//}
 
 		//memcpy(msg.body.sample.buf, pbData, msg.body.sample.len);
-		m_pfilter->m_enc.put_sample(msg.body.sample);
+		//m_pfilter->m_enc.put_sample(msg.body.sample);
+        if (m_pfilter->m_cb)
+            m_pfilter->m_cb(&msg.body.sample, m_pfilter->m_userdata);
 	}
 	return S_OK;
 }

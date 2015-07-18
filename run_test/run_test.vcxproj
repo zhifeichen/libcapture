@@ -51,14 +51,15 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\libcapture;..\captureServer;..\include;..\common</AdditionalIncludeDirectories>
+      <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>..\captureServer\Debug\css.obj;..\captureServer\Debug\css_stream.obj;..\captureServer\Debug\css_protocol_package.obj;..\captureServer\Debug\css_cmd_route.obj;..\captureServer\Debug\UserMng.obj;..\libcapture\Debug\msgsock.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\captureServer\Debug\css.obj;..\captureServer\Debug\css_stream.obj;..\captureServer\Debug\css_protocol_package.obj;..\captureServer\Debug\css_cmd_route.obj;..\captureServer\Debug\UserMng.obj;..\libcapture\Debug\MsgSocket.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

@@ -20,7 +20,8 @@ int css_stream_init(uv_loop_t* loop, css_stream_t* stream)
 	stream->loop = loop;
 	stream->stream.data = stream;
 	stream->buf = NULL;
-	stream->position = stream->package_len = stream->get_length = 0;
+	stream->position = stream->package_len = 0;
+    stream->get_length = CSS_STREAM_READ_HEAD;
 	stream->on_data = NULL;
 	stream->on_connect = NULL;
 	stream->on_close = NULL;

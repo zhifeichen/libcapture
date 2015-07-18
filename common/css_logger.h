@@ -41,7 +41,7 @@ extern "C" {
 
 #define DEFAULT_LOG_FILE_FIX ".log"
 
-#define CL_LOG(level,...) css_logger_log_inner(__FILE__, __LINE__, __FUNCTION__,uv_thread_self(),level, __VA_ARGS__)
+#define CL_LOG(level,...) css_logger_log_inner(__FILE__, __LINE__, __FUNCTION__,(long)uv_thread_self(),level, __VA_ARGS__)
 /**
  * %d : time like "mm-dd hh:MM:ss"
  * %p : process pid from getpid()

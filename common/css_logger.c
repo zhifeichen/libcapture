@@ -11,7 +11,7 @@
 //#include "css.h"
 #include "css_ini_file.h"
 
-static css_logger_t css_logger = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+static css_logger_t css_logger = { CSS_LOGGER_UNINIT, 0, 0, LL_DEBUG, 0, 0, 0, 0, 0, 0,
 DEFAULT_LOG_HEADER_FMT };
 static uv_mutex_t css_logger_mutex;
 static uv_once_t init_css_logger_guard_ = UV_ONCE_INIT;
@@ -31,7 +31,7 @@ static int css_logger_new_file();
 
 int css_logger_set_level(int level)
 {
-	css_logger.level_priority = level;
+	css_logger.level_priority = (css_logger_level)level;
 	return 0;
 }
 
@@ -65,7 +65,7 @@ void css_logger_set_config()
 	flag = NULL;
 	css_get_env(CSS_LOGGER_MODULE_NAME, "level", "0", &flag);
 	if (flag != NULL)
-		css_logger.level_priority = atoi(flag);
+		css_logger.level_priority = (css_logger_level)atoi(flag);
 	FREE(flag);
 }
 
@@ -468,7 +468,7 @@ int css_logger_fmt_replace_enter(char **ffmt, char *fmt)
 	int pos = 0;
 	if ((tmp = strstr(fmt, "\n")) == NULL)
 		return -1;
-	*ffmt = dest_str = malloc(len + 32);
+	*ffmt = dest_str = (char*)malloc(len + 32);
 	do {
 		pos = tmp - from_str;
 		strncpy(dest_str, from_str, pos);
@@ -543,7 +543,7 @@ int css_logger_log_inner(char *file, const long line, const char *func, long pid
 		return 0;
 	} else {
 		char time_str[24 + 1];
-		char *real_fmt = malloc(BUFSIZ);
+		char *real_fmt = (char*)malloc(BUFSIZ);
 		size_t basename_index;
 		int ret;
 		char *ffmt = NULL;
@@ -645,7 +645,7 @@ int css_logger_close()
 			uv_queue_work(css_logger.loop, req, css_logger_flush_to_file, css_logger_close_file);
 		}
 	}
-	css_logger.level_priority = 0;
+	css_logger.level_priority = (css_logger_level)0;
 	css_logger.no_console = 0;
 	css_logger.no_file = 0;
 	css_logger.status = CSS_LOGGER_UNINIT;

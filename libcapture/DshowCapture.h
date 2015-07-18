@@ -1,13 +1,13 @@
-#ifndef __ICAPTURE_H__
-#define __ICAPTURE_H__
+#ifndef __DSHOW_CAPTURE_H__
+#define __DSHOW_CAPTURE_H__
 
 #include <dshow.h>
 #include <Wmcodecdsp.h>
 #include <deque>
 #include <map>
 
-#include "msgsock.h"
 #include "IFilter.h"
+#include "MsgSocket.h"
 #include "decode_video.h"
 #include "decode_audio.h"
 
@@ -49,7 +49,7 @@ typedef struct dshow_stream_t
 
 enum PLAYSTATE { Stopped, Paused, Running, Init };
 
-struct remote_sys_t
+class CRemoteSys
 {
 	video_decoder			vdecoder;
 	audio_decoder			adecoder;
@@ -59,9 +59,9 @@ struct remote_sys_t
 	cc_userinfo_t			m_userinfo;
 
 	bool					b_has_interface;
-	//msgsock					m_msgsock;
 
-	remote_sys_t(uv_loop_t* loop);
+public:
+	CRemoteSys(uv_loop_t* loop);
 
 	HRESULT StartRemotePreview(int userid, HWND h);
 	HRESULT StopRemotePreview(void);
@@ -75,15 +75,15 @@ struct remote_sys_t
 
 class remote_map
 {
-	typedef std::map<int, remote_sys_t*> rMap;
-	typedef std::map<int, remote_sys_t*>::iterator rIt;
+	typedef std::map<int, CRemoteSys*> rMap;
+	typedef std::map<int, CRemoteSys*>::iterator rIt;
 	rMap					m_remote;
 
 public:
 	remote_map();
 	~remote_map();
 	int set(int userid, uv_loop_t* loop);
-	remote_sys_t* get(int userid);
+	CRemoteSys* get(int userid);
 	int remove(int userid);
 	int remove_all(void);
 };
@@ -91,7 +91,7 @@ public:
 /****************************************************************************
 * Access descriptor declaration
 ****************************************************************************/
-struct access_sys_t
+class CAccessSys
 {
 	/* These 2 must be left at the beginning */
 	//vlc_mutex_t lock;
@@ -103,14 +103,8 @@ struct access_sys_t
 	IVideoWindow		   *p_video_window;
 	IMediaEventEx		   *p_media_event;
 	IAMStreamConfig		   *p_VSC;
-
-	msgsock				   *m_msgsock;
-	cc_userinfo_t			m_userinfo;
-	remote_sys_t		   *m_remote;
-
-
-	//int                     i_crossbar_route_depth;
-	//CrossbarRoute           crossbar_routes[MAX_CROSSBAR_DEPTH];
+    CMyCapVideoFilter      *p_VideoFilter;
+    CMyCapAudioFilter      *p_AudioFilter;
 
 	HWND					h_wnd; /* preview window handle */
 	/* list of elementary streams */
@@ -137,39 +131,37 @@ struct access_sys_t
 	/* play stat */
 	PLAYSTATE e_psCurrent;
 
-    /* received frame callback function */
-    static void do_received_frame(cc_src_sample_t*, void* userdata);
+    /* private functions */
+    HRESULT GetInterfaces(void);
+    void CloseInterfaces(void);
 
-	/* public function */
-	access_sys_t(uv_loop_t* loop);
-	HRESULT GetInterfaces(void);
-	void CloseInterfaces(void);
+    HRESULT FindCaptureDevice(void);
 
-	HRESULT FindCaptureDevice(void);
+    HRESULT BuildPreview(void);
+    HRESULT BuildCapture(void);
+
+    HRESULT HandleGraphEvent(void);
+
+    void Msg(TCHAR *szFormat, ...);
+
+	/* public functions */
+public:
+	CAccessSys(uv_loop_t* loop);
+    ~CAccessSys(void);
 
 	HRESULT StartPreview(HWND h);
 	HRESULT StopPreview(void);
 
 	HRESULT StartCapture(void);
 	HRESULT StopCapture(void);
-
-	HRESULT StartRemotePreview(int userid, HWND h);
-	HRESULT StopRemotePreview(void);
 	
 	HRESULT SetupVideoWindow(HWND h);
-	HRESULT ChangePreviewState(int nShow);
-	HRESULT HandleGraphEvent(void);
-
-	void Msg(TCHAR *szFormat, ...);
 	
 	void ResizeVideoWindow(HWND h);
 
-	HRESULT BuildPreview(void);
-	HRESULT BuildCapture(void);
+    int SetRawFrameCallback(RawFrameCallBack cb, void* data);
 
-	int ConnectToServer(char* ip, uint16_t port);
-	int DisconnectToServer(void);
 };
 
 
-#endif //__ICAPTURE_H__
+#endif //__DSHOW_CAPTURE_H__
