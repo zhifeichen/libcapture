@@ -44,27 +44,35 @@ void CCaptureSys::DoReceivedMsg(MyMSG* msg)
 /* process msg functions */
 void CCaptureSys::DoConnectedMsg(MyMSG* msg)
 {
-
+    
 }
 
 void CCaptureSys::DoClosedMsg(MyMSG* msg)
 {
-
+    if (m_fnMsgCb){
+        m_fnMsgCb(msg, m_pMsgCbUserData);
+    }
 }
 
 void CCaptureSys::DoNewUserMsg(MyMSG* msg)
 {
-
+    if (m_fnMsgCb){
+        m_fnMsgCb(msg, m_pMsgCbUserData);
+    }
 }
 
 void CCaptureSys::DoUserLogoutMsg(MyMSG* msg)
 {
-
+    if (m_fnMsgCb){
+        m_fnMsgCb(msg, m_pMsgCbUserData);
+    }
 }
 
 void CCaptureSys::DoSocketErrMsg(MyMSG* msg)
 {
-
+    if (m_fnMsgCb){
+        m_fnMsgCb(msg, m_pMsgCbUserData);
+    }
 }
 
 void CCaptureSys::DoReceivedFrame(int userid, cc_src_sample_t* frame, void* userdata)
@@ -145,6 +153,11 @@ int CCaptureSys::DisconnectToServer(void)
         m_pMsgSocket = NULL;
     }
     return 0;
+}
+
+bool CCaptureSys::IsConnected(void)
+{
+    return (m_pMsgSocket && m_pMsgSocket->get_stat() == CMsgSocket::connected);
 }
 
 int CCaptureSys::SetReceivedMsgCb(void* userdata, void(*cb)(MyMSG*, void* userdata))

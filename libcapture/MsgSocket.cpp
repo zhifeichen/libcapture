@@ -4,32 +4,36 @@
 #include "css_logger.h"
 #include "DshowCapture.h"
 
-
 void CMsgSocket::conn_cb(css_stream_t* stream, int status)
 {
-	CMsgSocket* s = (CMsgSocket*)stream->data;
+    CMsgSocket* s = (CMsgSocket*)stream->data;
     printf("conn_cb status: %d\n", status);
+    s->conn_cb(status);
+}
+
+void CMsgSocket::conn_cb(int status)
+{
 	if (status < 0){
-		s->stat = close;
+        stat = CMsgSocket::closed;
 		MyMSG msg;
 		msg.code = CODE_SOCKETERROR;
 		msg.bodylen = 0;
-		if (s->receive_cb_)
-			s->receive_cb_(&msg, s->msgcb_userdata_);
+		if (receive_cb_)
+			receive_cb_(&msg, msgcb_userdata_);
 		return;
 	}
 	else{
-		s->stat = connected;
-		int ret = s->send_user_info();
+        stat = CMsgSocket::connected;
+		int ret = send_user_info();
 		if (ret < 0){
 			MyMSG msg;
 			msg.code = CODE_SOCKETERROR;
 			msg.bodylen = 0;
-			if (s->receive_cb_)
-				s->receive_cb_(&msg, s->msgcb_userdata_);
+			if (receive_cb_)
+				receive_cb_(&msg, msgcb_userdata_);
 			return;
 		}
-		css_stream_read_start(s->stream_, read_cb);
+		css_stream_read_start(stream_, read_cb);
 	}
 }
 
@@ -37,7 +41,7 @@ void CMsgSocket::close_cb(css_stream_t* stream)
 {
 	CMsgSocket* s = (CMsgSocket*)stream->data;
     s->stream_ = NULL;
-	s->stat = close;
+	s->stat = closed;
 	if (s->delete_when_close_){
 		delete s;
 	}
@@ -140,7 +144,7 @@ int CMsgSocket::connect_sever(char* ip, uint16_t port)
 int CMsgSocket::dis_connect(bool bDelete)
 {
 	int ret = 0;
-	if (stat == close){
+	if (stat == closed){
 		if (bDelete){
 			delete this;
 		}

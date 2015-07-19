@@ -20,6 +20,9 @@ class CCaptureSys
     FNMSGCALLBACK   m_fnMsgCb;
     void           *m_pMsgCbUserData;
 
+    /* is connected to the server */
+    bool IsConnected(void);
+
     /* received socket msg callback funtion */
     static void DoReceivedMsg(MyMSG* msg, void* data);
     void DoReceivedMsg(MyMSG* msg);
