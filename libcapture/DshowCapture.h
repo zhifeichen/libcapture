@@ -140,6 +140,7 @@ class CAccessSys
     HRESULT BuildPreview(void);
     HRESULT BuildCapture(void);
 
+	HRESULT SetupVideoWindow(HWND h);
     HRESULT HandleGraphEvent(void);
 
     void Msg(TCHAR *szFormat, ...);
@@ -154,8 +155,6 @@ public:
 
 	HRESULT StartCapture(void);
 	HRESULT StopCapture(void);
-	
-	HRESULT SetupVideoWindow(HWND h);
 	
 	void ResizeVideoWindow(HWND h);
 
