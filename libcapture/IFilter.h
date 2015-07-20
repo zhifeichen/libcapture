@@ -45,7 +45,7 @@ class CMyCapVideoInputPin : public CRenderedInputPin
 	int m_width, m_height;
 	SwsContext *m_pSwsCtx;
 
-	int convert_fmt(const CMediaType *);
+	int ConvertFmt(const CMediaType *);
 	
 public:
 
@@ -62,7 +62,7 @@ public:
 	// Check if the pin can support this specific proposed type and format
 	HRESULT CheckMediaType(const CMediaType *);
 
-	void convert_rgb(uint8_t* dst, uint8_t* src);
+	void ConvertRGB(uint8_t* dst, uint8_t* src);
 
 	// Break connection
 	HRESULT BreakConnect();
@@ -102,11 +102,11 @@ public:
     void SetRawFrameCallBack(RawFrameCallBack cb, void* mdata);
 
 private:
-	HANDLE m_hFile;
+	//HANDLE m_hFile;
 	// Open and write to the file
-	HRESULT OpenFile();
-	HRESULT CloseFile();
-	HRESULT Write(PBYTE pbData, LONG lDataLength);
+	//HRESULT OpenFile();
+	//HRESULT CloseFile();
+	//HRESULT Write(PBYTE pbData, LONG lDataLength);
 
 	// x264 encode call back
 	static void enc_cb(cc_src_sample_t smple, void* data);
@@ -127,7 +127,7 @@ class CMyCapAudioInputPin : public CRenderedInputPin
 	int m_width, m_height;
 	SwsContext *m_pSwsCtx;
 
-	int convert_fmt(const CMediaType *);
+	int ConvertFmt(const CMediaType *);
 
 public:
 

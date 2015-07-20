@@ -177,6 +177,7 @@ HRESULT CCaptureSys::StartPreview(HWND h)
 HRESULT CCaptureSys::StopPreview(void)
 {
     HRESULT hr = S_FALSE;
+	hr = m_access.StopPreview();
     return hr;
 }
 

@@ -26,7 +26,7 @@ CMyCapVideoFilter::CMyCapVideoFilter(CAccessSys *psys,
 	HRESULT *phr) :
 	CBaseFilter(NAME("CMyCapVideoFilter"), pUnk, pLock, CLSID_MyCapVideoFilter),
 	m_pLock(pLock),
-	m_hFile(INVALID_HANDLE_VALUE),
+	//m_hFile(INVALID_HANDLE_VALUE),
     m_cb(NULL), m_userdata(NULL)
 {
 	m_pPin = new CMyCapVideoInputPin(this);
@@ -73,7 +73,7 @@ STDMETHODIMP CMyCapVideoFilter::Stop()
 {
 	CAutoLock cObjectLock(m_pLock);
 
-	CloseFile();
+	//CloseFile();
 	//m_enc.stop_encode();
 	return CBaseFilter::Stop();
 }
@@ -88,7 +88,7 @@ STDMETHODIMP CMyCapVideoFilter::Pause()
 {
 	CAutoLock cObjectLock(m_pLock);
 
-	OpenFile();
+	//OpenFile();
 	//m_enc.set_param();
 	//m_enc.open();
 	return CBaseFilter::Pause();
@@ -109,7 +109,7 @@ STDMETHODIMP CMyCapVideoFilter::Run(REFERENCE_TIME tStart)
 	// (eg. running out of disk space).
 	//
 	// Since we are restarting the graph, a new file will be created.
-	OpenFile();
+	//OpenFile();
 	//m_enc.start_encode(enc_cb, this);
 	//MessageBox(NULL, TEXT("m_enc.start_encode(enc_cb, this);"), TEXT("CMyCapVideoFilter"), MB_OK);
 	return CBaseFilter::Run(tStart);
@@ -154,110 +154,6 @@ void CMyCapVideoFilter::enc_cb(cc_src_sample_t smple)
 	}
 }
 
-//
-// OpenFile
-//
-// Opens the file ready for dumping
-//
-HRESULT CMyCapVideoFilter::OpenFile()
-{
-	TCHAR *pFileName = TEXT("1.mpg");
-
-	// Is the file already opened
-	if (m_hFile != INVALID_HANDLE_VALUE) {
-		return NOERROR;
-	}
-	//avcodec_register_all();
-	//AVCodec *pCodecH264;
-	//pCodecH264 = avcodec_find_encoder(/*AV_CODEC_ID_AAC*/AV_CODEC_ID_H264);
-	//if (!pCodecH264)
-	//{
-	//	fprintf(stderr, "h264 codec not found\n");
-	//	exit(1);
-	//}
-
-	// Has a filename been set yet
-	//if (m_pFileName == NULL) {
-	//	return ERROR_INVALID_NAME;
-	//}
-
-	// Convert the UNICODE filename if necessary
-
-//#if defined(WIN32) && !defined(UNICODE)
-//	char convert[MAX_PATH];
-//
-//	if (!WideCharToMultiByte(CP_ACP, 0, m_pFileName, -1, convert, MAX_PATH, 0, 0))
-//		return ERROR_INVALID_NAME;
-//
-//	pFileName = convert;
-//#else
-//	pFileName = m_pFileName;
-//#endif
-
-	// Try to open the file
-
-	//m_hFile = CreateFile((LPCTSTR)pFileName,   // The filename
-	//	GENERIC_WRITE,         // File access
-	//	FILE_SHARE_READ,       // Share access
-	//	NULL,                  // Security
-	//	CREATE_ALWAYS,         // Open flags
-	//	(DWORD)0,             // More flags
-	//	NULL);                 // Template
-
-	//if (m_hFile == INVALID_HANDLE_VALUE)
-	//{
-	//	DWORD dwErr = GetLastError();
-	//	return HRESULT_FROM_WIN32(dwErr);
-	//}
-
-	return S_OK;
-
-} // Open
-
-//
-// CloseFile
-//
-// Closes any dump file we have opened
-//
-HRESULT CMyCapVideoFilter::CloseFile()
-{
-	// Must lock this section to prevent problems related to
-	// closing the file while still receiving data in Receive()
-
-	if (m_hFile == INVALID_HANDLE_VALUE) {
-		return NOERROR;
-	}
-
-	CloseHandle(m_hFile);
-	m_hFile = INVALID_HANDLE_VALUE; // Invalidate the file 
-
-	return NOERROR;
-
-}
-
-//
-// Write
-//
-// Write raw data to the file
-//
-HRESULT CMyCapVideoFilter::Write(PBYTE pbData, LONG lDataLength)
-{
-	DWORD dwWritten;
-
-	// If the file has already been closed, don't continue
-	if (m_hFile == INVALID_HANDLE_VALUE) {
-		return S_FALSE;
-	}
-
-	if (!WriteFile(m_hFile, (PVOID)pbData, (DWORD)lDataLength,
-		&dwWritten, NULL))
-	{
-		return S_FALSE;
-	}
-
-	return S_OK;
-}
-
 
 //
 //  Definition of CDumpInputPin
@@ -276,7 +172,7 @@ CMyCapVideoInputPin::CMyCapVideoInputPin(CMyCapVideoFilter* pFilter) :
 {
 }
 
-int CMyCapVideoInputPin::convert_fmt(const CMediaType *mt)
+int CMyCapVideoInputPin::ConvertFmt(const CMediaType *mt)
 {
 	m_mt = *mt;
 	if (mt->subtype == MEDIASUBTYPE_RGB24){
@@ -307,7 +203,7 @@ int CMyCapVideoInputPin::convert_fmt(const CMediaType *mt)
 HRESULT CMyCapVideoInputPin::CheckMediaType(const CMediaType *mt)
 {
 	if (mt->majortype == MEDIATYPE_Video/* && mt->subtype == MEDIASUBTYPE_YUY2*/){
-		convert_fmt(mt);
+		ConvertFmt(mt);
 		return S_OK;
 	} else
 		return S_FALSE;
@@ -340,7 +236,7 @@ STDMETHODIMP CMyCapVideoInputPin::ReceiveCanBlock()
 }
 
 
-void CMyCapVideoInputPin::convert_rgb(uint8_t* dst, uint8_t* src)
+void CMyCapVideoInputPin::ConvertRGB(uint8_t* dst, uint8_t* src)
 {
 	int i;
 	int pd = 0;
@@ -417,7 +313,7 @@ STDMETHODIMP CMyCapVideoInputPin::Receive(IMediaSample *pSample)
 		if (m_pix_fmt == PIX_FMT_BGR24){
 			int inlen = avpicture_get_size(m_pix_fmt, m_width, m_height);
 			uint8_t* buf = (uint8_t*)malloc(inlen);
-			convert_rgb(buf, pbData);
+			ConvertRGB(buf, pbData);
 			avpicture_fill((AVPicture*)&input_pic, buf, m_pix_fmt, m_width, m_height);
 			sws_scale(m_pSwsCtx, input_pic.data, input_pic.linesize, 0, m_height, output_pic.data, output_pic.linesize);
 			free(buf);
@@ -464,7 +360,7 @@ STDMETHODIMP CMyCapVideoInputPin::Receive(IMediaSample *pSample)
 		//MessageBox(NULL, TEXT("m_pfilter->m_enc.put_sample(msg.body.sample);"), TEXT("CMyCapVideoInputPin"), MB_OK);
 	}
 	return S_OK;
-	return m_pfilter->Write(pbData, pSample->GetActualDataLength());
+	//return m_pfilter->Write(pbData, pSample->GetActualDataLength());
 }
 
 //
@@ -650,7 +546,7 @@ m_pSwsCtx(NULL)
 {
 }
 
-int CMyCapAudioInputPin::convert_fmt(const CMediaType *mt)
+int CMyCapAudioInputPin::ConvertFmt(const CMediaType *mt)
 {
 	m_mt = *mt;
 	if (mt->formattype == FORMAT_WaveFormatEx){
@@ -678,7 +574,7 @@ int CMyCapAudioInputPin::convert_fmt(const CMediaType *mt)
 HRESULT CMyCapAudioInputPin::CheckMediaType(const CMediaType *mt)
 {
 	if (mt->majortype == MEDIATYPE_Audio && mt->subtype == MEDIASUBTYPE_PCM){
-		convert_fmt(mt);
+		ConvertFmt(mt);
 		return S_OK;
 	}
 	else
