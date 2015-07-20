@@ -78,20 +78,6 @@ TEST_IMPL(CaptureSysMsg)
 	CHECKGOTO(ret = css_server_init(NULL, 0));
 	CHECKGOTO(ret = css_server_start());
 
-	//{
-	//    int ret = 0;
-	//    uv_tcp_t *tcp_stream = (uv_tcp_t*)malloc(sizeof(uv_tcp_t));
-	//    uv_tcp_init(loop, tcp_stream);
-	//    uv_connect_t *connect_req;
-	//    connect_req = (uv_connect_t*)malloc(sizeof(uv_connect_t));
-	//    sockaddr_in addr;
-	//    uv_ip4_addr("192.168.1.1", 80, &addr);
-	//    ret = uv_tcp_connect(connect_req, tcp_stream, (const struct sockaddr*)&addr, connect_cb);
-	//    if (ret){
-	//        free(connect_req);
-	//    }
-	//}
-
 	CCaptureSys* s = new CCaptureSys(loop);
 	s->SetUserInfo(&userinfo);
 	s->SetReceivedMsgCb(s, on_msg);
