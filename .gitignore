@@ -61,3 +61,13 @@ run_test/Debug/run_test.log
 run_test/Debug/vc120.pdb
 server/Debug/captureServer.log
 /libcapture.v12.suo
+/Debug
+/libcapture/Debug
+/captureServer/Debug
+/captureServer/Release
+/Release
+/libcapture/Release
+/MFC_test/Release
+/MFC_test/Debug
+/run_test/Debug
+/run_test/Release
