@@ -52,14 +52,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\libcapture;..\captureServer;..\include;..\common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\libcapture;..\captureServer;..\include;..\include\baseclasses;..\include\ffmpeg;..\include\x264;..\include\sdl;..\common</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>..\captureServer\Debug\css.obj;..\captureServer\Debug\css_stream.obj;..\captureServer\Debug\css_protocol_package.obj;..\captureServer\Debug\css_cmd_route.obj;..\captureServer\Debug\UserMng.obj;..\libcapture\Debug\MsgSocket.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\captureServer\Debug\css.obj;..\captureServer\Debug\css_stream.obj;..\captureServer\Debug\css_protocol_package.obj;..\captureServer\Debug\css_cmd_route.obj;..\captureServer\Debug\UserMng.obj;..\libcapture\Debug\MsgSocket.obj;..\libcapture\Debug\CaptureSys.obj;..\libcapture\Debug\aacencode.obj;..\libcapture\Debug\x264encode.obj;..\libcapture\Debug\DshowCapture.obj;..\libcapture\Debug\IFilter.obj;..\libcapture\Debug\decode_audio.obj;..\libcapture\Debug\decode_video.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -71,7 +71,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\libcapture;..\captureServer;..\include;..\common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\libcapture;..\captureServer;..\include;..\include\baseclasses;..\include\ffmpeg;..\include\x264;..\include\sdl;..\common</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
@@ -96,6 +96,7 @@
     <ClCompile Include="css_test.cpp" />
     <ClCompile Include="run_test.cpp" />
     <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="test_CaptureSys.cpp" />
     <ClCompile Include="test_msgsock.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

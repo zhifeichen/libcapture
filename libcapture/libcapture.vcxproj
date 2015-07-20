@@ -115,7 +115,7 @@
     <ClCompile Include="..\common\css_protocol_package.c" />
     <ClCompile Include="..\common\css_stream.c" />
     <ClCompile Include="..\common\css_util.c" />
-    <ClCompile Include="aacencod.cpp" />
+    <ClCompile Include="aacencode.cpp" />
     <ClCompile Include="CaptureSys.cpp" />
     <ClCompile Include="decode_audio.cpp" />
     <ClCompile Include="decode_video.cpp" />

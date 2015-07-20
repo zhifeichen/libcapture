@@ -89,9 +89,6 @@
     <ClCompile Include="decode_video.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="aacencod.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="decode_audio.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -117,6 +114,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="MsgSocket.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="aacencode.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
