@@ -28,8 +28,8 @@ typedef enum
  * add test func here!   func name must start with 'test_'
  * XX(name,active) like XX(name,0) or XX(name,TCASE_ACTIVE)
  */
-#define CSS_TEST_CASES(XX)  			\
-	XX(msgsock, TCASE_INACTIVE)			\
+#define CSS_TEST_CASES(XX)  				\
+	XX(msgsock, TCASE_INACTIVE)				\
 	XX(CaptureSysMsg, TCASE_ACTIVE)		\
 
 /**
