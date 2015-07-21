@@ -184,12 +184,14 @@ HRESULT CCaptureSys::StopPreview(void)
 HRESULT CCaptureSys::StartCapture(void)
 {
     HRESULT hr = S_FALSE;
+	hr = m_access.StartCapture();
     return hr;
 }
 
 HRESULT CCaptureSys::StopCapture(void)
 {
     HRESULT hr = S_FALSE;
+	hr = m_access.StopCapture();
     return hr;
 }
 
