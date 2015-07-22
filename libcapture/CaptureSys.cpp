@@ -184,6 +184,7 @@ HRESULT CCaptureSys::StopPreview(void)
 HRESULT CCaptureSys::StartCapture(void)
 {
     HRESULT hr = S_FALSE;
+	m_access.SetRawFrameCallback(DoDshowRawFrame, this);
 	hr = m_access.StartCapture();
     return hr;
 }
@@ -191,6 +192,7 @@ HRESULT CCaptureSys::StartCapture(void)
 HRESULT CCaptureSys::StopCapture(void)
 {
     HRESULT hr = S_FALSE;
+	m_access.SetRawFrameCallback(NULL, NULL);
 	hr = m_access.StopCapture();
     return hr;
 }
