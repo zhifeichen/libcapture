@@ -6,9 +6,10 @@
 #include "libcapture.h"
 #include "css_util.h"
 #include "css_stream.h"
+#include "ResourcePool.h"
 
 
-class CMsgSocket
+class CMsgSocket : public CResource
 {
 public:
 	CMsgSocket(uv_loop_t* loop);

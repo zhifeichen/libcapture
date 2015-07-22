@@ -6,6 +6,7 @@
 #include <deque>
 #include "uv/uv.h"
 #include "Streams.h"
+#include "ResourcePool.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -16,7 +17,7 @@ extern "C"{
 
 typedef void(*NALCALLBACK)(cc_src_sample_t sample, void* user_data);
 
-class aacenc
+class aacenc : public CResource
 {
 
 	int i_frame;

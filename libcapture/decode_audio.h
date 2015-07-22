@@ -3,6 +3,7 @@
 
 #include <deque>
 #include "uv/uv.h"
+#include "ResourcePool.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,7 +24,7 @@ extern "C" {
 
 #define MAX_AUDIO_FRAME_SIZE 192000 // 1 second of 48khz 32bit audio
 
-class audio_decoder
+class audio_decoder : public CResource
 {
 	uint8_t			*iobuffer;
 	AVIOContext		*avio;

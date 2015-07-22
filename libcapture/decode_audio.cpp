@@ -33,6 +33,7 @@ audio_decoder::audio_decoder()
 , renderer(NULL), hWin(NULL)
 , bStop(true), bOpen(false), bStarting(false)
 , iFrame(0)
+, CResource(e_rsc_audiodecode)
 {
 	uv_mutex_init(&queue_mutex);
 	uv_cond_init(&queue_not_empty);

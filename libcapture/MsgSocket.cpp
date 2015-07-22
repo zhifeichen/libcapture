@@ -104,7 +104,8 @@ msgcb_userdata_(NULL),
 received_info_(false), sended_start_(false),
 delete_when_close_(false),
 local_user_(),
-stream_(NULL)
+stream_(NULL),
+CResource(e_rsc_msgsocket)
 {
 	if (loop_){
         stream_ = (css_stream_t*)malloc(sizeof(css_stream_t));

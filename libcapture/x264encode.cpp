@@ -12,6 +12,7 @@ x264enc::x264enc(uv_loop_t* loop)
 , p_loop(loop)
 , p_user_data(NULL)
 , fn_cb(NULL)
+, CResource(e_rsc_x264encode)
 {
 	uv_mutex_init(&queue_mutex);
 	uv_cond_init(&queue_not_empty);

@@ -59,7 +59,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>..\captureServer\Debug\css.obj;..\captureServer\Debug\css_stream.obj;..\captureServer\Debug\css_protocol_package.obj;..\captureServer\Debug\css_cmd_route.obj;..\captureServer\Debug\UserMng.obj;..\libcapture\Debug\MsgSocket.obj;..\libcapture\Debug\CaptureSys.obj;..\libcapture\Debug\aacencode.obj;..\libcapture\Debug\x264encode.obj;..\libcapture\Debug\DshowCapture.obj;..\libcapture\Debug\IFilter.obj;..\libcapture\Debug\decode_audio.obj;..\libcapture\Debug\decode_video.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\captureServer\Debug\css.obj;..\captureServer\Debug\css_stream.obj;..\captureServer\Debug\css_protocol_package.obj;..\captureServer\Debug\css_cmd_route.obj;..\captureServer\Debug\UserMng.obj;..\libcapture\Debug\MsgSocket.obj;..\libcapture\Debug\CaptureSys.obj;..\libcapture\Debug\aacencode.obj;..\libcapture\Debug\x264encode.obj;..\libcapture\Debug\DshowCapture.obj;..\libcapture\Debug\IFilter.obj;..\libcapture\Debug\decode_audio.obj;..\libcapture\Debug\decode_video.obj;..\libcapture\Debug\ResourcePool.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -80,7 +80,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>..\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>..\captureServer\Release\css.obj;..\captureServer\Release\css_stream.obj;..\captureServer\Release\css_protocol_package.obj;..\captureServer\Release\css_cmd_route.obj;..\captureServer\Release\UserMng.obj;..\libcapture\Release\MsgSocket.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\captureServer\Release\css.obj;..\captureServer\Release\css_stream.obj;..\captureServer\Release\css_protocol_package.obj;..\captureServer\Release\css_cmd_route.obj;..\captureServer\Release\UserMng.obj;..\libcapture\Release\MsgSocket.obj;..\libcapture\Release\ResourcePool.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

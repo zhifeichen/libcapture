@@ -1,6 +1,7 @@
 #include "MsgSocket.h"
 #include "css.h"
 #include "css_test.h"
+#include "ResourcePool.h"
 
 #pragma comment(lib, "uv\\libuv.lib")
 
@@ -72,6 +73,7 @@ TEST_IMPL(msgsock)
     int ret = -1;
 	uv_loop_t* loop = uv_default_loop();
     if (!loop) return;
+	CResourcePool::GetInstance().Init(loop);
     cc_userinfo_t userinfo = { 0 };
     cc_userinfo_t userinfo2 = { 0 };
 
@@ -100,12 +102,12 @@ TEST_IMPL(msgsock)
     //    }
     //}
 
-    CMsgSocket* s = new CMsgSocket(loop);
+	CMsgSocket* s = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance().Get(e_rsc_msgsocket));
     s->set_local_user(&userinfo);
     s->on_received(s, on_msg);
     s->on_received_frame(s, on_frame);
 
-    CMsgSocket* s2 = new CMsgSocket(loop);
+	CMsgSocket* s2 = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance().Get(e_rsc_msgsocket));
     s2->set_local_user(&userinfo2);
     s2->on_received(s2, on_msg);
     s2->on_received_frame(s2, on_frame);

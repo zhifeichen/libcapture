@@ -3,6 +3,7 @@
 
 #include <deque>
 #include "uv/uv.h"
+#include "ResourcePool.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +22,7 @@ extern "C" {
 
 #include "libcapture.h"
 
-class video_decoder
+class video_decoder : public CResource
 {
 	uint8_t			*iobuffer;
 	AVIOContext		*avio;

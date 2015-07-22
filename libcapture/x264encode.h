@@ -5,6 +5,7 @@
 #include "libcapture.h"
 #include <deque>
 #include "uv\uv.h"
+#include "ResourcePool.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -14,7 +15,7 @@ extern "C"{
 
 typedef void(*NALCALLBACK)(cc_src_sample_t sample, void* user_data);
 
-class x264enc
+class x264enc : public CResource
 {
 	int width, height;
 	x264_param_t param;
