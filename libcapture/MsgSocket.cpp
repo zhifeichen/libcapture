@@ -100,7 +100,7 @@ loop_(loop),
 receive_cb_(NULL),
 msgcb_userdata_(NULL),
 received_info_(false), sended_start_(false),
-local_user_(),
+local_user_({ 0 }),
 stream_(NULL),
 CResource(e_rsc_msgsocket)
 {
@@ -142,11 +142,10 @@ int CMsgSocket::connect_sever(char* ip, uint16_t port)
 int CMsgSocket::dis_connect(void)
 {
 	int ret = 0;
-	if (stat == closed){
+	if (stat == uninit){
 		Release();
 		return 0;
-	}
-	if (stat == connected){
+	}else {
 		css_stream_close(stream_, close_cb);
 	}
 	return ret;

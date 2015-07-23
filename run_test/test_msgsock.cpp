@@ -139,6 +139,11 @@ TEST_IMPL(msgsock)
     printf("connect_sever return %d\n", ret);
     printf("s stat: %d\n", s1->get_stat());
     printf("s2 stat: %d\n", s2->get_stat());
+	CMsgSocket* ss = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance().Get(e_rsc_msgsocket));
+	ss->dis_connect();
+	ss = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance().Get(e_rsc_msgsocket));
+	ss->connect_sever("127.0.0.1", 5566);
+	ss->dis_connect();
     uv_run(loop, UV_RUN_DEFAULT);
     printf("stop!\n");
 	printf("Resource count: %d\n", CResourcePool::GetInstance().GetResourceCount());

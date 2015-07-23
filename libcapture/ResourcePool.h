@@ -15,7 +15,7 @@ typedef enum {
 class CResource
 {
 	friend class CResourcePool;
-public:
+protected:
 	CResource(E_RESOURCE_TYPE type);
 	virtual ~CResource();
 
