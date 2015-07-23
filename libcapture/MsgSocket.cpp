@@ -42,9 +42,7 @@ void CMsgSocket::close_cb(css_stream_t* stream)
 	CMsgSocket* s = (CMsgSocket*)stream->data;
     s->stream_ = NULL;
 	s->stat = closed;
-	if (s->delete_when_close_){
-		delete s;
-	}
+	s->Release();
 }
 
 void CMsgSocket::read_cb(css_stream_t* stream, char* package, ssize_t status)
@@ -102,7 +100,6 @@ loop_(loop),
 receive_cb_(NULL),
 msgcb_userdata_(NULL),
 received_info_(false), sended_start_(false),
-delete_when_close_(false),
 local_user_(),
 stream_(NULL),
 CResource(e_rsc_msgsocket)
@@ -142,17 +139,14 @@ int CMsgSocket::connect_sever(char* ip, uint16_t port)
 	return ret;
 }
 
-int CMsgSocket::dis_connect(bool bDelete)
+int CMsgSocket::dis_connect(void)
 {
 	int ret = 0;
 	if (stat == closed){
-		if (bDelete){
-			delete this;
-		}
+		Release();
 		return 0;
 	}
 	if (stat == connected){
-		delete_when_close_ = bDelete;
 		css_stream_close(stream_, close_cb);
 	}
 	return ret;

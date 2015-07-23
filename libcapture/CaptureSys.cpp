@@ -130,10 +130,10 @@ void CCaptureSys::after_work_connect(void)
 int CCaptureSys::ConnectToServer(char* ip, uint16_t port)
 {
     if (m_pMsgSocket){
-        m_pMsgSocket->dis_connect(true);
+        m_pMsgSocket->dis_connect();
         m_pMsgSocket = NULL;
     }
-    m_pMsgSocket = new CMsgSocket(m_pLoop);
+	m_pMsgSocket = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance().Get(e_rsc_msgsocket));
     if (!m_pMsgSocket){
         return -1;
     }
@@ -149,7 +149,7 @@ int CCaptureSys::ConnectToServer(char* ip, uint16_t port)
 int CCaptureSys::DisconnectToServer(void)
 {
     if (m_pMsgSocket){
-        m_pMsgSocket->dis_connect(true);
+        m_pMsgSocket->dis_connect();
         m_pMsgSocket = NULL;
     }
     return 0;

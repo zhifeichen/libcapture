@@ -12,15 +12,12 @@
 class CMsgSocket : public CResource
 {
 public:
-	CMsgSocket(uv_loop_t* loop);
-	~CMsgSocket(void);
-
     int get_stat(void){ return stat; }
     int set_local_user(cc_userinfo_t* user);
 	int set_loop(uv_loop_t* loop);
 
 	int connect_sever(char* ip, uint16_t port);
-	int dis_connect(bool bDelete = false);
+	int dis_connect(void);
 	int send(uint8_t* buf, uint32_t len);
 	//int send(IMediaSample* sample);
 	int on_received(void* userdata, void(*cb)(MyMSG*, void* userdata));
@@ -29,6 +26,11 @@ public:
     enum e_sock_stat { uninit, init, connected, closed };
 
 private:
+	friend class CResourcePool;
+	/* only get point through CResourcePool */
+	CMsgSocket(uv_loop_t* loop);
+	virtual ~CMsgSocket(void);
+
     static void conn_cb(css_stream_t* stream, int status);
     void conn_cb(int status);
     static void close_cb(css_stream_t* stream);
@@ -51,7 +53,6 @@ private:
 
     bool				received_info_;
     bool				sended_start_;
-    bool				delete_when_close_;
 
     e_sock_stat         stat;
 

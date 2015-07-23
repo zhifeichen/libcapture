@@ -29,7 +29,7 @@ typedef enum
  * XX(name,active) like XX(name,0) or XX(name,TCASE_ACTIVE)
  */
 #define CSS_TEST_CASES(XX)  				\
-	XX(msgsock, TCASE_INACTIVE)				\
+	XX(msgsock, TCASE_ACTIVE)				\
 	XX(CaptureSysMsg, TCASE_ACTIVE)		\
 
 /**
