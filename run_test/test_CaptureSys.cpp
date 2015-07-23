@@ -115,6 +115,7 @@ TEST_IMPL(CaptureSysMsg)
 	//printf("s2 stat: %d\n", s2->get_stat());
 	uv_run(loop, UV_RUN_DEFAULT);
 	printf("stop!\n");
+	printf("Resource count: %d\n", CResourcePool::GetInstance().GetResourceCount());
 _clean:
 	css_server_stop();
 	css_server_clean();
