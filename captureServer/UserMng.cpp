@@ -272,8 +272,8 @@ RoomMng::~RoomMng()
 int RoomMng::AddUser(int id, int roomid, css_stream_t* stream)
 {
 	UserClient* user = FindUser(id);
-	if (user){
-		return 0;
+	if (user){ // same user login and pre-user still in room
+		RemoveUser(id);
 	}
 	user = new UserClient(id, roomid, stream);
 	if (!user){
