@@ -50,7 +50,6 @@ class audio_decoder : public CResource
 	SDL_Event       event;
 
 	std::deque<cc_src_sample_t> buf_deque;
-	HWND			hWin;
 
 	// uv:
 	uv_loop_t		*pLoop;
@@ -83,7 +82,7 @@ public:
 	audio_decoder();
 	~audio_decoder();
 
-	int init(uv_loop_t* loop, HWND w = NULL);
+	int init(uv_loop_t* loop);
 	int open(void);
 	int start();
 	int stop();

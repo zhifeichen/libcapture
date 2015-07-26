@@ -30,7 +30,8 @@ typedef enum
  */
 #define CSS_TEST_CASES(XX)  				\
 	XX(msgsock, TCASE_ACTIVE)				\
-	XX(CaptureSysMsg, TCASE_ACTIVE)		\
+	XX(CaptureSysMsg, TCASE_ACTIVE)		    \
+    XX(AudioDecoder, TCASE_ACTIVE)          \
 
 /**
  * test imple

@@ -30,25 +30,25 @@ audio_decoder::audio_decoder()
 , pCodecCtx(NULL), pCodec(NULL)
 , pFrame(NULL), sws_ctx(NULL), pFrameYUV(NULL)
 , bmp(NULL), screen(NULL)
-, renderer(NULL), hWin(NULL)
+, renderer(NULL)
 , bStop(true), bOpen(false), bStarting(false)
 , iFrame(0)
 , CResource(e_rsc_audiodecode)
 {
-	uv_mutex_init(&queue_mutex);
-	uv_cond_init(&queue_not_empty);
 }
 
 audio_decoder::~audio_decoder()
 {
-	if (!bStop) stop();
 }
 
-int audio_decoder::init(uv_loop_t* loop, HWND w)
+int audio_decoder::init(uv_loop_t* loop)
 {
 	int ret = 0;
 	pLoop = loop;
-	hWin = w;
+
+    uv_mutex_init(&queue_mutex);
+    uv_cond_init(&queue_not_empty);
+
 	// Register all formats and codecs
 	av_register_all();
 
@@ -261,12 +261,16 @@ int audio_decoder::close()
 	// Free the YUV frame
 	av_frame_free(&pFrame);
 
+    av_freep(iobuffer);
+
 	// Close the codec
 	avcodec_close(pCodecCtx);
 	avcodec_close(pCodecCtxOrig);
 
 	// Close the video file
 	avformat_close_input(&pFormatCtx);
+
+    finit();
 
 	bOpen = false;
 	bStarting = false;

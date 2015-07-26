@@ -47,5 +47,8 @@
     <ClCompile Include="test_CaptureSys.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="test_AudioDecoder.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
