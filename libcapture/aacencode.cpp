@@ -1,26 +1,26 @@
 #include "stdafx.h"
 #include "aacencode.h"
 
-aacenc::aacenc(uv_loop_t* loop)
+CAacEncoder::CAacEncoder(uv_loop_t* loop)
 : b_stop(true)
 , i_frame(0)
 , i_frame_size(0)
 , p_loop(loop)
 , p_user_data(NULL)
 , fn_cb(NULL)
-, CResource(e_rsc_aacencode)
+, CResource(e_rsc_aacencoder)
 {
 	uv_mutex_init(&queue_mutex);
 	uv_cond_init(&queue_not_empty);
 }
 
-aacenc::~aacenc()
+CAacEncoder::~CAacEncoder()
 {
 	uv_mutex_destroy(&queue_mutex);
 	uv_cond_destroy(&queue_not_empty);
 }
 
-int aacenc::set_param(const CMediaType* mt)
+int CAacEncoder::set_param(const CMediaType* mt)
 {
 	int ret = -1;
 	if (mt){
@@ -30,7 +30,7 @@ int aacenc::set_param(const CMediaType* mt)
 	return ret;
 }
 
-int aacenc::open()
+int CAacEncoder::open()
 {
 	int ret = -1;
 
@@ -72,7 +72,7 @@ int aacenc::open()
 	return ret;
 }
 
-int aacenc::start_encode(NALCALLBACK cb, void* data)
+int CAacEncoder::start_encode(NALCALLBACK cb, void* data)
 {
 	int ret = -1;
 	if (!b_stop) return 0;
@@ -84,14 +84,14 @@ int aacenc::start_encode(NALCALLBACK cb, void* data)
 	return ret;
 }
 
-int aacenc::stop_encode()
+int CAacEncoder::stop_encode()
 {
 	if (b_stop) return 0;
 	b_stop = true;
 	return 0;
 }
 
-int aacenc::put_sample(cc_src_sample_t sample)
+int CAacEncoder::put_sample(cc_src_sample_t sample)
 {
 	uv_mutex_lock(&queue_mutex);
 	if (sample_queue.size() > 50){
@@ -106,13 +106,13 @@ int aacenc::put_sample(cc_src_sample_t sample)
 	return 0;
 }
 
-int aacenc::encode_delay()
+int CAacEncoder::encode_delay()
 {
 	int ret = -1;
 	return ret;
 }
 
-int aacenc::close()
+int CAacEncoder::close()
 {
 	int ret = 0;
 	
@@ -121,7 +121,7 @@ int aacenc::close()
 
 static FILE* fd = NULL;
 
-void aacenc::encode()
+void CAacEncoder::encode()
 {
 	//MessageBox(NULL, TEXT("1"), TEXT("remote preview"), MB_OK);
 	
@@ -243,14 +243,14 @@ void aacenc::encode()
 }
 
 // static encode worker
-void aacenc::encode_worker(uv_work_t* req)
+void CAacEncoder::encode_worker(uv_work_t* req)
 {
-	aacenc* self = (aacenc*)req->data;
+	CAacEncoder* self = (CAacEncoder*)req->data;
 	self->encode();
 }
 
-void aacenc::after_encode(uv_work_t* req, int status)
+void CAacEncoder::after_encode(uv_work_t* req, int status)
 {
-	aacenc* self = (aacenc*)req->data;
+	CAacEncoder* self = (CAacEncoder*)req->data;
 	self->close();
 }

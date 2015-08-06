@@ -88,16 +88,16 @@ CResource* CResourcePool::Get(E_RESOURCE_TYPE type)
 	case e_rsc_msgsocket:
 		r = new CMsgSocket(m_pLoop);
 		break;
-	case e_rsc_aacencode:
-		r = new aacenc(m_pLoop);
+	case e_rsc_aacencoder:
+		r = new CAacEncoder(m_pLoop);
 		break;
-	case e_rsc_x264encode:
+	case e_rsc_x264encoder:
 		r = new x264enc(m_pLoop);
 		break;
-	case e_rsc_audiodecode:
+	case e_rsc_audiodecoder:
 		r = new audio_decoder();
 		break;
-	case e_rsc_videodecode:
+	case e_rsc_videodecoder:
 		r = new video_decoder();
 		break;
 	default:

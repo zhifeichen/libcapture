@@ -17,7 +17,7 @@ extern "C"{
 
 typedef void(*NALCALLBACK)(cc_src_sample_t sample, void* user_data);
 
-class aacenc : public CResource
+class CAacEncoder : public CResource
 {
 
 	int i_frame;
@@ -49,8 +49,8 @@ class aacenc : public CResource
 	int encode_delay();
 
 public:
-	aacenc(uv_loop_t* loop);
-	~aacenc();
+	CAacEncoder(uv_loop_t* loop);
+	~CAacEncoder();
 	int set_param(const CMediaType* mt = 0);
 	int open();
 	int put_sample(cc_src_sample_t sample);

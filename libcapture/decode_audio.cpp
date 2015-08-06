@@ -33,7 +33,7 @@ audio_decoder::audio_decoder()
 , renderer(NULL)
 , bStop(true), bOpen(false), bStarting(false)
 , iFrame(0)
-, CResource(e_rsc_audiodecode)
+, CResource(e_rsc_audiodecoder)
 {
 }
 

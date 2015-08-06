@@ -6,10 +6,10 @@
 
 typedef enum {
 	e_rsc_msgsocket,
-	e_rsc_aacencode,
-	e_rsc_x264encode,
-	e_rsc_audiodecode,
-	e_rsc_videodecode
+	e_rsc_aacencoder,
+	e_rsc_x264encoder,
+	e_rsc_audiodecoder,
+	e_rsc_videodecoder
 }E_RESOURCE_TYPE;
 
 class CResource
