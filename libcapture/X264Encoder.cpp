@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "x264encode.h"
+#include "X264Encoder.h"
 
 CX264Encoder::CX264Encoder(uv_loop_t* loop)
 : b_stop(true)

@@ -22,7 +22,7 @@ extern "C" {
 
 #include "libcapture.h"
 
-class video_decoder : public CResource
+class CVideoDecoder : public CResource
 {
 	uint8_t			*iobuffer;
 	AVIOContext		*avio;
@@ -66,8 +66,8 @@ class video_decoder : public CResource
 	void decode(void);
 
 public:
-	video_decoder();
-	~video_decoder();
+	CVideoDecoder();
+	~CVideoDecoder();
 
 	int init(uv_loop_t* loop, HWND w);
 	int resizewindow(void);

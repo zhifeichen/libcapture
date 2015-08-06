@@ -11,8 +11,8 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-#include "x264encode.h"
-#include "aacencode.h"
+#include "X264Encoder.h"
+#include "AacEncoder.h"
 
 // {D06A31CB-3518-4054-A167-65CE67D7A931}
 DEFINE_GUID(CLSID_MyCapVideoFilter,

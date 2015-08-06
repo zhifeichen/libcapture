@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "aacencode.h"
+#include "AacEncoder.h"
 
 CAacEncoder::CAacEncoder(uv_loop_t* loop)
 : b_stop(true)

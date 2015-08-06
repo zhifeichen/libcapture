@@ -2,8 +2,8 @@
 #define __CAPTURE_SYS_H__
 
 #include "uv/uv.h"
-#include "aacencode.h"
-#include "x264encode.h"
+#include "AacEncoder.h"
+#include "X264Encoder.h"
 #include "DshowCapture.h"
 #include "MsgSocket.h"
 

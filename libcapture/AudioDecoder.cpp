@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "decode_audio.h"
+#include "AudioDecoder.h"
 
 //Buffer:
 //|-----------|-------------|
@@ -25,7 +25,7 @@ void  fill_audio(void *udata, Uint8 *stream, int len){
 }
 //-----------------
 
-audio_decoder::audio_decoder()
+CAudioDecoder::CAudioDecoder()
 : pFormatCtx(NULL), pCodecCtxOrig(NULL)
 , pCodecCtx(NULL), pCodec(NULL)
 , pFrame(NULL), sws_ctx(NULL), pFrameYUV(NULL)
@@ -37,11 +37,11 @@ audio_decoder::audio_decoder()
 {
 }
 
-audio_decoder::~audio_decoder()
+CAudioDecoder::~CAudioDecoder()
 {
 }
 
-int audio_decoder::init(uv_loop_t* loop)
+int CAudioDecoder::init(uv_loop_t* loop)
 {
 	int ret = 0;
 	pLoop = loop;
@@ -59,7 +59,7 @@ int audio_decoder::init(uv_loop_t* loop)
 	return ret;
 }
 
-int audio_decoder::finit()
+int CAudioDecoder::finit()
 {
 	int ret = 0;
 	uv_mutex_destroy(&queue_mutex);
@@ -67,7 +67,7 @@ int audio_decoder::finit()
 	return ret;
 }
 
-int audio_decoder::open(void)
+int CAudioDecoder::open(void)
 {
 	int ret = 0;
 	bOpen = true;
@@ -173,7 +173,7 @@ int audio_decoder::open(void)
 	return ret;
 }
 
-int audio_decoder::start()
+int CAudioDecoder::start()
 {
 	int ret = 0;
 	if (!bStop || bStarting) return 0;
@@ -186,7 +186,7 @@ int audio_decoder::start()
 	return ret;
 }
 
-void audio_decoder::decode(void)
+void CAudioDecoder::decode(void)
 {
 	// Read frames and save first five frames to disk
 	//if (!bOpen && buf_deque.size() >2){
@@ -247,14 +247,14 @@ void audio_decoder::decode(void)
 	}
 }
 
-int audio_decoder::stop()
+int CAudioDecoder::stop()
 {
 	int ret = 0;
 	bStop = true;
 	return ret;
 }
 
-int audio_decoder::close()
+int CAudioDecoder::close()
 {
 	int ret = 0;
 	SDL_DestroyTexture(bmp);
@@ -277,7 +277,7 @@ int audio_decoder::close()
 	return ret;
 }
 
-int audio_decoder::put(cc_src_sample_t buf)
+int CAudioDecoder::put(cc_src_sample_t buf)
 {
 	int ret = 0;
 	uv_mutex_lock(&queue_mutex);
@@ -299,7 +299,7 @@ int audio_decoder::put(cc_src_sample_t buf)
 
 static FILE* fd = NULL;
 
-int audio_decoder::put(uint8_t* buf, int len)
+int CAudioDecoder::put(uint8_t* buf, int len)
 {
 	int ret = 0;
 	
@@ -325,7 +325,7 @@ int audio_decoder::put(uint8_t* buf, int len)
 	return ret;
 }
 
-int audio_decoder::fill_iobuffer(uint8_t *buf, int bufsize)
+int CAudioDecoder::fill_iobuffer(uint8_t *buf, int bufsize)
 {
 	int ret = 0;
 	uv_mutex_lock(&queue_mutex);
@@ -368,21 +368,21 @@ int audio_decoder::fill_iobuffer(uint8_t *buf, int bufsize)
 }
 
 // static function
-int audio_decoder::fill_iobuffer(void * opaque, uint8_t *buf, int bufsize)
+int CAudioDecoder::fill_iobuffer(void * opaque, uint8_t *buf, int bufsize)
 {
-	audio_decoder* self = (audio_decoder*)opaque;
+	CAudioDecoder* self = (CAudioDecoder*)opaque;
 	return self->fill_iobuffer(buf, bufsize);
 }
 
 // static encode worker
-void audio_decoder::decode_worker(uv_work_t* req)
+void CAudioDecoder::decode_worker(uv_work_t* req)
 {
-	audio_decoder* self = (audio_decoder*)req->data;
+	CAudioDecoder* self = (CAudioDecoder*)req->data;
 	self->decode();
 }
 
-void audio_decoder::after_decode(uv_work_t* req, int status)
+void CAudioDecoder::after_decode(uv_work_t* req, int status)
 {
-	audio_decoder* self = (audio_decoder*)req->data;
+	CAudioDecoder* self = (CAudioDecoder*)req->data;
 	self->close();
 }

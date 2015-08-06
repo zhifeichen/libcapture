@@ -30,18 +30,6 @@
     <ClInclude Include="IFilter.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="x264encode.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="decode_video.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="aacencode.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="decode_audio.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\css_protocol_package.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -72,6 +60,18 @@
     <ClInclude Include="ResourcePool.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="AacEncoder.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioDecoder.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="VideoDecoder.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="X264Encoder.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -84,15 +84,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="IFilter.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="x264encode.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="decode_video.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="decode_audio.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\common\css_protocol_package.c">
@@ -119,10 +110,19 @@
     <ClCompile Include="MsgSocket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="aacencode.cpp">
+    <ClCompile Include="ResourcePool.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ResourcePool.cpp">
+    <ClCompile Include="AacEncoder.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioDecoder.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoDecoder.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="X264Encoder.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

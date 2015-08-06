@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "decode_video.h"
+#include "VideoDecoder.h"
 
-video_decoder::video_decoder()
+CVideoDecoder::CVideoDecoder()
 : pFormatCtx(NULL), pCodecCtxOrig(NULL)
 , pCodecCtx(NULL), pCodec(NULL)
 , pFrame(NULL), sws_ctx(NULL), pFrameYUV(NULL)
@@ -15,12 +15,12 @@ video_decoder::video_decoder()
 	uv_cond_init(&queue_not_empty);
 }
 
-video_decoder::~video_decoder()
+CVideoDecoder::~CVideoDecoder()
 {
 	if (!bStop) stop();
 }
 
-int video_decoder::init(uv_loop_t* loop, HWND w)
+int CVideoDecoder::init(uv_loop_t* loop, HWND w)
 {
 	int ret = 0;
 	pLoop = loop;
@@ -35,7 +35,7 @@ int video_decoder::init(uv_loop_t* loop, HWND w)
 	return ret;
 }
 
-int video_decoder::resizewindow(void)
+int CVideoDecoder::resizewindow(void)
 {
 	if (hWin){
 		RECT rc;
@@ -49,7 +49,7 @@ int video_decoder::resizewindow(void)
 	return -1;
 }
 
-int video_decoder::finit()
+int CVideoDecoder::finit()
 {
 	int ret = 0;
 	uv_mutex_destroy(&queue_mutex);
@@ -57,7 +57,7 @@ int video_decoder::finit()
 	return ret;
 }
 
-int video_decoder::open(void)
+int CVideoDecoder::open(void)
 {
 	int ret = 0;
 	bOpen = true;
@@ -176,7 +176,7 @@ int video_decoder::open(void)
 	return ret;
 }
 
-int video_decoder::start()
+int CVideoDecoder::start()
 {
 	int ret = 0;
 	if (!bStop || bStarting) return 0;
@@ -189,7 +189,7 @@ int video_decoder::start()
 	return ret;
 }
 
-void video_decoder::decode(void)
+void CVideoDecoder::decode(void)
 {
 	// Read frames and save first five frames to disk
 	//if (!bOpen && buf_deque.size() >2){
@@ -252,14 +252,14 @@ void video_decoder::decode(void)
 	}
 }
 
-int video_decoder::stop()
+int CVideoDecoder::stop()
 {
 	int ret = 0;
 	bStop = true;
 	return ret;
 }
 
-int video_decoder::close()
+int CVideoDecoder::close()
 {
 	int ret = 0;
 	SDL_DestroyTexture(bmp);
@@ -278,7 +278,7 @@ int video_decoder::close()
 	return ret;
 }
 
-int video_decoder::put(cc_src_sample_t buf)
+int CVideoDecoder::put(cc_src_sample_t buf)
 {
 	int ret = 0;
 	uv_mutex_lock(&queue_mutex);
@@ -300,7 +300,7 @@ int video_decoder::put(cc_src_sample_t buf)
 
 static FILE* fd = NULL;
 
-int video_decoder::put(uint8_t* buf, int len)
+int CVideoDecoder::put(uint8_t* buf, int len)
 {
 	int ret = 0;
 	
@@ -326,7 +326,7 @@ int video_decoder::put(uint8_t* buf, int len)
 	return ret;
 }
 
-int video_decoder::fill_iobuffer(uint8_t *buf, int bufsize)
+int CVideoDecoder::fill_iobuffer(uint8_t *buf, int bufsize)
 {
 	int ret = 0;
 	uv_mutex_lock(&queue_mutex);
@@ -369,21 +369,21 @@ int video_decoder::fill_iobuffer(uint8_t *buf, int bufsize)
 }
 
 // static function
-int video_decoder::fill_iobuffer(void * opaque, uint8_t *buf, int bufsize)
+int CVideoDecoder::fill_iobuffer(void * opaque, uint8_t *buf, int bufsize)
 {
-	video_decoder* self = (video_decoder*)opaque;
+	CVideoDecoder* self = (CVideoDecoder*)opaque;
 	return self->fill_iobuffer(buf, bufsize);
 }
 
 // static encode worker
-void video_decoder::decode_worker(uv_work_t* req)
+void CVideoDecoder::decode_worker(uv_work_t* req)
 {
-	video_decoder* self = (video_decoder*)req->data;
+	CVideoDecoder* self = (CVideoDecoder*)req->data;
 	self->decode();
 }
 
-void video_decoder::after_decode(uv_work_t* req, int status)
+void CVideoDecoder::after_decode(uv_work_t* req, int status)
 {
-	video_decoder* self = (video_decoder*)req->data;
+	CVideoDecoder* self = (CVideoDecoder*)req->data;
 	self->close();
 }

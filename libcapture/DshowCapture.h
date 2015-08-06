@@ -8,8 +8,8 @@
 
 #include "IFilter.h"
 #include "MsgSocket.h"
-#include "decode_video.h"
-#include "decode_audio.h"
+#include "VideoDecoder.h"
+#include "AudioDecoder.h"
 
 
 using namespace std;
@@ -51,8 +51,8 @@ enum PLAYSTATE { Stopped, Paused, Running, Init };
 
 class CRemoteSys
 {
-	video_decoder			vdecoder;
-	audio_decoder			adecoder;
+	CVideoDecoder			vdecoder;
+	CAudioDecoder			adecoder;
 	uv_loop_t			   *p_loop;
 
 	HWND					h_wnd; /* preview window handle */

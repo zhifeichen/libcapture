@@ -1,9 +1,9 @@
 #include "ResourcePool.h"
 #include "MsgSocket.h"
-#include "aacencode.h"
-#include "x264encode.h"
-#include "decode_audio.h"
-#include "decode_video.h"
+#include "AacEncoder.h"
+#include "X264Encoder.h"
+#include "AudioDecoder.h"
+#include "VideoDecoder.h"
 
 CResource::CResource(E_RESOURCE_TYPE type):
 m_eType(type),
@@ -95,10 +95,10 @@ CResource* CResourcePool::Get(E_RESOURCE_TYPE type)
 		r = new CX264Encoder(m_pLoop);
 		break;
 	case e_rsc_audiodecoder:
-		r = new audio_decoder();
+		r = new CAudioDecoder();
 		break;
 	case e_rsc_videodecoder:
-		r = new video_decoder();
+		r = new CVideoDecoder();
 		break;
 	default:
 		break;

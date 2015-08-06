@@ -24,7 +24,7 @@ extern "C" {
 
 #define MAX_AUDIO_FRAME_SIZE 192000 // 1 second of 48khz 32bit audio
 
-class audio_decoder : public CResource
+class CAudioDecoder : public CResource
 {
 	uint8_t			*iobuffer;
 	AVIOContext		*avio;
@@ -79,8 +79,8 @@ class audio_decoder : public CResource
 	void decode(void);
 
 public:
-	audio_decoder();
-	~audio_decoder();
+	CAudioDecoder();
+	~CAudioDecoder();
 
 	int init(uv_loop_t* loop);
 	int open(void);
