@@ -69,6 +69,7 @@ class CAudioDecoder : public CResource
 	static int fill_iobuffer(void * opaque, uint8_t *buf, int bufsize);
 	int fill_iobuffer(uint8_t *buf, int bufsize);
 
+	bool            bInit;
 	bool			bStop;
 	bool			bOpen;
 	bool			bStarting;

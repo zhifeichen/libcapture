@@ -28,10 +28,11 @@ void  fill_audio(void *udata, Uint8 *stream, int len){
 CAudioDecoder::CAudioDecoder(uv_loop_t* loop)
 : pFormatCtx(NULL), pCodecCtxOrig(NULL)
 , pCodecCtx(NULL), pCodec(NULL)
+, iobuffer(NULL)
 , pFrame(NULL), sws_ctx(NULL), pFrameYUV(NULL)
 , bmp(NULL), screen(NULL)
 , renderer(NULL)
-, bStop(true), bOpen(false), bStarting(false)
+, bStop(true), bOpen(false), bStarting(false), bInit(false)
 , iFrame(0), pLoop(loop)
 , CResource(e_rsc_audiodecoder)
 {
@@ -44,25 +45,29 @@ CAudioDecoder::~CAudioDecoder()
 int CAudioDecoder::init(void)
 {
 	int ret = 0;
+	if (!bInit){
+		uv_mutex_init(&queue_mutex);
+		uv_cond_init(&queue_not_empty);
 
-    uv_mutex_init(&queue_mutex);
-    uv_cond_init(&queue_not_empty);
+		// Register all formats and codecs
+		av_register_all();
 
-	// Register all formats and codecs
-	av_register_all();
-
-	if (ret = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) {
-		fprintf(stderr, "Could not initialize SDL - %s\n", SDL_GetError());
+		if (ret = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) {
+			fprintf(stderr, "Could not initialize SDL - %s\n", SDL_GetError());
+		}
+		bInit = true;
 	}
-
 	return ret;
 }
 
 int CAudioDecoder::finit()
 {
 	int ret = 0;
-	uv_mutex_destroy(&queue_mutex);
-	uv_cond_destroy(&queue_not_empty);
+	if (bInit){
+		uv_mutex_destroy(&queue_mutex);
+		uv_cond_destroy(&queue_not_empty);
+		bInit = false;
+	}
 	return ret;
 }
 
@@ -250,6 +255,8 @@ int CAudioDecoder::stop()
 {
 	int ret = 0;
 	bStop = true;
+	if (!bStarting)
+		close();
 	return ret;
 }
 
@@ -258,21 +265,26 @@ int CAudioDecoder::close()
 	int ret = 0;
 	SDL_DestroyTexture(bmp);
 	// Free the YUV frame
-	av_frame_free(&pFrame);
-
+	if (pFrame)
+		av_frame_free(&pFrame);
+	if (iobuffer)
     av_freep(iobuffer);
 
 	// Close the codec
-	avcodec_close(pCodecCtx);
+	if (pCodecCtx)
+		avcodec_close(pCodecCtx);
+	if (pCodecCtxOrig)
 	avcodec_close(pCodecCtxOrig);
 
 	// Close the video file
+	if (pFormatCtx)
 	avformat_close_input(&pFormatCtx);
 
     finit();
 
 	bOpen = false;
 	bStarting = false;
+	Release();
 	return ret;
 }
 

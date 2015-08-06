@@ -7,29 +7,33 @@ CVideoDecoder::CVideoDecoder(uv_loop_t* loop)
 , pFrame(NULL), sws_ctx(NULL), pFrameYUV(NULL)
 , bmp(NULL), screen(NULL)
 , renderer(NULL), hWin(NULL)
-, bStop(true), bOpen(false), bStarting(false)
+, bStop(true), bOpen(false), bStarting(false), bInit(false)
 , iFrame(0)
 , pLoop(loop)
 , CResource(e_rsc_videodecoder)
 {
-	uv_mutex_init(&queue_mutex);
-	uv_cond_init(&queue_not_empty);
 }
 
 CVideoDecoder::~CVideoDecoder()
 {
-	if (!bStop) stop();
 }
 
 int CVideoDecoder::init(HWND w)
 {
 	int ret = 0;
-	hWin = w;
-	// Register all formats and codecs
-	av_register_all();
+	if (!bInit){
+		hWin = w;
 
-	if (ret = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) {
-		fprintf(stderr, "Could not initialize SDL - %s\n", SDL_GetError());
+		uv_mutex_init(&queue_mutex);
+		uv_cond_init(&queue_not_empty);
+
+		// Register all formats and codecs
+		av_register_all();
+
+		if (ret = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) {
+			fprintf(stderr, "Could not initialize SDL - %s\n", SDL_GetError());
+		}
+		bInit = true;
 	}
 
 	return ret;
@@ -52,8 +56,12 @@ int CVideoDecoder::resizewindow(void)
 int CVideoDecoder::finit()
 {
 	int ret = 0;
-	uv_mutex_destroy(&queue_mutex);
-	uv_cond_destroy(&queue_not_empty);
+	if (bInit){
+		uv_mutex_destroy(&queue_mutex);
+		uv_cond_destroy(&queue_not_empty);
+		hWin = NULL;
+		bInit = false;
+	}
 	return ret;
 }
 
@@ -256,6 +264,8 @@ int CVideoDecoder::stop()
 {
 	int ret = 0;
 	bStop = true;
+	if (!bStarting)
+		close();
 	return ret;
 }
 
@@ -275,6 +285,8 @@ int CVideoDecoder::close()
 
 	bOpen = false;
 	bStarting = false;
+	finit();
+	Release();
 	return ret;
 }
 
