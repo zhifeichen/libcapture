@@ -92,7 +92,7 @@ CResource* CResourcePool::Get(E_RESOURCE_TYPE type)
 		r = new CAacEncoder(m_pLoop);
 		break;
 	case e_rsc_x264encoder:
-		r = new x264enc(m_pLoop);
+		r = new CX264Encoder(m_pLoop);
 		break;
 	case e_rsc_audiodecoder:
 		r = new audio_decoder();

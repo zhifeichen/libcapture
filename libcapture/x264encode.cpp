@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "x264encode.h"
 
-x264enc::x264enc(uv_loop_t* loop)
+CX264Encoder::CX264Encoder(uv_loop_t* loop)
 : b_stop(true)
 , h(NULL)
 , nal(NULL)
@@ -18,13 +18,13 @@ x264enc::x264enc(uv_loop_t* loop)
 	uv_cond_init(&queue_not_empty);
 }
 
-x264enc::~x264enc()
+CX264Encoder::~CX264Encoder()
 {
 	uv_mutex_destroy(&queue_mutex);
 	uv_cond_destroy(&queue_not_empty);
 }
 
-int x264enc::set_param(x264_param_t* p)
+int CX264Encoder::set_param(x264_param_t* p)
 {
 	int ret = -1;
 	ret = x264_param_default_preset(&param, "ultrafast", NULL);
@@ -41,7 +41,7 @@ int x264enc::set_param(x264_param_t* p)
 	return ret;
 }
 
-int x264enc::open()
+int CX264Encoder::open()
 {
 	int ret = -1;
 	if (!h ){
@@ -55,7 +55,7 @@ int x264enc::open()
 	return ret;
 }
 
-int x264enc::start_encode(NALCALLBACK cb, void* data)
+int CX264Encoder::start_encode(NALCALLBACK cb, void* data)
 {
 	int ret = -1;
 	if (!b_stop) return 0;
@@ -67,14 +67,14 @@ int x264enc::start_encode(NALCALLBACK cb, void* data)
 	return ret;
 }
 
-int x264enc::stop_encode()
+int CX264Encoder::stop_encode()
 {
 	if (b_stop) return 0;
 	b_stop = true;
 	return 0;
 }
 
-int x264enc::put_sample(cc_src_sample_t sample)
+int CX264Encoder::put_sample(cc_src_sample_t sample)
 {
 	uv_mutex_lock(&queue_mutex);
 	if (sample_queue.size() > 50){
@@ -89,14 +89,14 @@ int x264enc::put_sample(cc_src_sample_t sample)
 	return 0;
 }
 
-int x264enc::encode_delay()
+int CX264Encoder::encode_delay()
 {
 	int ret = -1;
 	ret = x264_encoder_delayed_frames(h);
 	return ret;
 }
 
-int x264enc::close()
+int CX264Encoder::close()
 {
 	int ret = 0;
 	if (h){
@@ -119,7 +119,7 @@ static void convert_rgb(uint8_t* dst, uint8_t* src, int w, int h)
 
 static FILE* fd = NULL;
 
-void x264enc::encode()
+void CX264Encoder::encode()
 {
 	//MessageBox(NULL, TEXT("1"), TEXT("remote preview"), MB_OK);
 	if (x264_picture_alloc(&pic, param.i_csp, param.i_width, param.i_height) < 0){
@@ -214,14 +214,14 @@ void x264enc::encode()
 }
 
 // static encode worker
-void x264enc::encode_worker(uv_work_t* req)
+void CX264Encoder::encode_worker(uv_work_t* req)
 {
-	x264enc* self = (x264enc*)req->data;
+	CX264Encoder* self = (CX264Encoder*)req->data;
 	self->encode();
 }
 
-void x264enc::after_encode(uv_work_t* req, int status)
+void CX264Encoder::after_encode(uv_work_t* req, int status)
 {
-	x264enc* self = (x264enc*)req->data;
+	CX264Encoder* self = (CX264Encoder*)req->data;
 	self->close();
 }

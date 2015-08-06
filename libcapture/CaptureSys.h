@@ -10,7 +10,7 @@
 class CCaptureSys
 {
     uv_loop_t      *m_pLoop;
-    x264enc         m_x264Enc;
+    CX264Encoder         m_x264Enc;
     CAacEncoder          m_aacEnc;
     CAccessSys      m_access;
     CRemoteSys      m_remote;

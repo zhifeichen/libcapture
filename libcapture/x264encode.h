@@ -15,7 +15,7 @@ extern "C"{
 
 typedef void(*NALCALLBACK)(cc_src_sample_t sample, void* user_data);
 
-class x264enc : public CResource
+class CX264Encoder : public CResource
 {
 	int width, height;
 	x264_param_t param;
@@ -45,8 +45,8 @@ class x264enc : public CResource
 	int encode_delay();
 
 public:
-	x264enc(uv_loop_t* loop);
-	~x264enc();
+	CX264Encoder(uv_loop_t* loop);
+	~CX264Encoder();
 	int set_param(x264_param_t* param = 0);
 	int open();
 	int put_sample(cc_src_sample_t sample);
