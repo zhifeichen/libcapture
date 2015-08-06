@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "VideoDecoder.h"
 
-CVideoDecoder::CVideoDecoder()
+CVideoDecoder::CVideoDecoder(uv_loop_t* loop)
 : pFormatCtx(NULL), pCodecCtxOrig(NULL)
 , pCodecCtx(NULL), pCodec(NULL)
 , pFrame(NULL), sws_ctx(NULL), pFrameYUV(NULL)
@@ -9,6 +9,7 @@ CVideoDecoder::CVideoDecoder()
 , renderer(NULL), hWin(NULL)
 , bStop(true), bOpen(false), bStarting(false)
 , iFrame(0)
+, pLoop(loop)
 , CResource(e_rsc_videodecoder)
 {
 	uv_mutex_init(&queue_mutex);
@@ -20,10 +21,9 @@ CVideoDecoder::~CVideoDecoder()
 	if (!bStop) stop();
 }
 
-int CVideoDecoder::init(uv_loop_t* loop, HWND w)
+int CVideoDecoder::init(HWND w)
 {
 	int ret = 0;
-	pLoop = loop;
 	hWin = w;
 	// Register all formats and codecs
 	av_register_all();

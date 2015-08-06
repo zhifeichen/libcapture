@@ -25,14 +25,14 @@ void  fill_audio(void *udata, Uint8 *stream, int len){
 }
 //-----------------
 
-CAudioDecoder::CAudioDecoder()
+CAudioDecoder::CAudioDecoder(uv_loop_t* loop)
 : pFormatCtx(NULL), pCodecCtxOrig(NULL)
 , pCodecCtx(NULL), pCodec(NULL)
 , pFrame(NULL), sws_ctx(NULL), pFrameYUV(NULL)
 , bmp(NULL), screen(NULL)
 , renderer(NULL)
 , bStop(true), bOpen(false), bStarting(false)
-, iFrame(0)
+, iFrame(0), pLoop(loop)
 , CResource(e_rsc_audiodecoder)
 {
 }
@@ -41,10 +41,9 @@ CAudioDecoder::~CAudioDecoder()
 {
 }
 
-int CAudioDecoder::init(uv_loop_t* loop)
+int CAudioDecoder::init(void)
 {
 	int ret = 0;
-	pLoop = loop;
 
     uv_mutex_init(&queue_mutex);
     uv_cond_init(&queue_not_empty);

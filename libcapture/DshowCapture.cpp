@@ -1112,7 +1112,8 @@ HRESULT CAccessSys::HandleGraphEvent(void)
 CRemoteSys::CRemoteSys(uv_loop_t* loop) :
 h_wnd(NULL),
 b_has_interface(false),
-p_loop(loop)
+p_loop(loop),
+vdecoder(NULL), adecoder(NULL)
 {}
 
 void CRemoteSys::Msg(TCHAR *szFormat, ...)
@@ -1134,7 +1135,8 @@ void CRemoteSys::ResizeVideoWindow(HWND h)
 		// Make the preview video fill our window
 		//GetClientRect(h, &rc);
 		// TODO resize
-		vdecoder.resizewindow();
+		if (vdecoder)
+			vdecoder->resizewindow();
 	}
 }
 
@@ -1143,9 +1145,16 @@ HRESULT CRemoteSys::StartRemotePreview(int userid, HWND h)
 	HRESULT hr = S_OK;
 	if (h)
 		h_wnd = h;
-
-	vdecoder.init(p_loop, h_wnd);
-	adecoder.init(p_loop);
+	if (!vdecoder){
+		vdecoder = dynamic_cast<CVideoDecoder*>(CResourcePool::GetInstance().Get(e_rsc_videodecoder));
+		if (!vdecoder) return S_FALSE;
+		vdecoder->init(h_wnd);
+	}
+	if (!adecoder){
+		adecoder = dynamic_cast<CAudioDecoder*>(CResourcePool::GetInstance().Get(e_rsc_audiodecoder));
+		if (!adecoder) return S_FALSE;
+		adecoder->init();
+	}
 
 	return hr;
 }
@@ -1153,8 +1162,8 @@ HRESULT CRemoteSys::StartRemotePreview(int userid, HWND h)
 HRESULT CRemoteSys::StopRemotePreview(void)
 {
 	HRESULT hr = S_OK;
-	vdecoder.stop();
-	adecoder.stop();
+	vdecoder->stop();
+	adecoder->stop();
 	return hr;
 }
 
@@ -1162,9 +1171,9 @@ void CRemoteSys::putframe(cc_src_sample_t* frame)
 {
 	//decoder.put(msg->body.sample);
     if (frame->sampletype == SAMPLEVIDEO)
-        vdecoder.put(frame->buf[0], frame->len);
+        vdecoder->put(frame->buf[0], frame->len);
     else if (frame->sampletype == SAMPLEAUDIO)
-        adecoder.put(frame->buf[0], frame->len);
+        adecoder->put(frame->buf[0], frame->len);
 }
 
 remote_map::remote_map() :

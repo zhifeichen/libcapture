@@ -95,10 +95,10 @@ CResource* CResourcePool::Get(E_RESOURCE_TYPE type)
 		r = new CX264Encoder(m_pLoop);
 		break;
 	case e_rsc_audiodecoder:
-		r = new CAudioDecoder();
+		r = new CAudioDecoder(m_pLoop);
 		break;
 	case e_rsc_videodecoder:
-		r = new CVideoDecoder();
+		r = new CVideoDecoder(m_pLoop);
 		break;
 	default:
 		break;

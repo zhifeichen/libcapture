@@ -51,8 +51,8 @@ enum PLAYSTATE { Stopped, Paused, Running, Init };
 
 class CRemoteSys
 {
-	CVideoDecoder			vdecoder;
-	CAudioDecoder			adecoder;
+	CVideoDecoder		   *vdecoder;
+	CAudioDecoder		   *adecoder;
 	uv_loop_t			   *p_loop;
 
 	HWND					h_wnd; /* preview window handle */

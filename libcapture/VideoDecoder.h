@@ -65,11 +65,14 @@ class CVideoDecoder : public CResource
 	static void after_decode(uv_work_t* req, int status);
 	void decode(void);
 
-public:
-	CVideoDecoder();
+private:
+	friend class CResourcePool;
+	/* only get point through CResourcePool */
+	CVideoDecoder(uv_loop_t* loop);
 	~CVideoDecoder();
 
-	int init(uv_loop_t* loop, HWND w);
+public:
+	int init(HWND w);
 	int resizewindow(void);
 	int open(void);
 	int start();

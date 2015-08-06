@@ -78,11 +78,14 @@ class CAudioDecoder : public CResource
 	static void after_decode(uv_work_t* req, int status);
 	void decode(void);
 
-public:
-	CAudioDecoder();
+private:
+	friend class CResourcePool;
+	/* only get point through CResourcePool */
+	CAudioDecoder(uv_loop_t* loop);
 	~CAudioDecoder();
 
-	int init(uv_loop_t* loop);
+public:
+	int init(void);
 	int open(void);
 	int start();
 	int stop();
