@@ -24,26 +24,26 @@ extern "C" {
 
 class CVideoDecoder : public CResource
 {
-	uint8_t			*iobuffer;
-	AVIOContext		*avio;
+	uint8_t			   *iobuffer;
+	AVIOContext		   *avio;
 
-	AVFormatContext *pFormatCtx;
-	int             videoStream;
-	AVCodecContext  *pCodecCtxOrig;
-	AVCodecContext  *pCodecCtx;
-	AVCodec         *pCodec;
-	AVFrame         *pFrame;
-	AVFrame			*pFrameYUV;
-	AVPacket        packet;
-	int             frameFinished;
-	float           aspect_ratio;
-	struct SwsContext *sws_ctx;
-	SDL_Renderer	*renderer;
+	AVFormatContext    *pFormatCtx;
+	int				    videoStream;
+	AVCodecContext     *pCodecCtxOrig;
+	AVCodecContext     *pCodecCtx;
+	AVCodec            *pCodec;
+	AVFrame            *pFrame;
+	AVFrame			   *pFrameYUV;
+	AVPacket            packet;
+	int                 frameFinished;
+	float               aspect_ratio;
+	struct SwsContext  *sws_ctx;
+	SDL_Renderer	   *renderer;
 
-	SDL_Texture     *bmp;
-	SDL_Window      *screen;
-	SDL_Rect        rect_src, rect_dst;
-	SDL_Event       event;
+	SDL_Texture        *texture;
+	SDL_Window         *screen;
+	SDL_Rect            rect_src, rect_dst;
+	SDL_Event           event;
 
 	std::deque<cc_src_sample_t> buf_deque;
 	HWND			hWin;

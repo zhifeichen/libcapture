@@ -5,7 +5,7 @@ CVideoDecoder::CVideoDecoder(uv_loop_t* loop)
 : pFormatCtx(NULL), pCodecCtxOrig(NULL)
 , pCodecCtx(NULL), pCodec(NULL)
 , pFrame(NULL), sws_ctx(NULL), pFrameYUV(NULL)
-, bmp(NULL), screen(NULL)
+, texture(NULL), screen(NULL)
 , renderer(NULL), hWin(NULL)
 , bStop(true), bOpen(false), bStarting(false), bInit(false)
 , iFrame(0)
@@ -154,7 +154,7 @@ int CVideoDecoder::open(void)
 	}
 
 	// Allocate a place to put our YUV image on that screen
-	bmp = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_IYUV /*SDL_PIXELFORMAT_YV12*/,
+	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_IYUV /*SDL_PIXELFORMAT_YV12*/,
 		SDL_TEXTUREACCESS_STREAMING,
 		pCodecCtx->width, pCodecCtx->height);
 
@@ -227,14 +227,14 @@ void CVideoDecoder::decode(void)
 						pFrameYUV->data, pFrameYUV->linesize);
 
 					//SDL_UpdateTexture(bmp, &rect_src, pFrameYUV->data[0], pFrameYUV->linesize[0]);
-					SDL_UpdateYUVTexture(bmp, &rect_src,
+					SDL_UpdateYUVTexture(texture, &rect_src,
 						pFrameYUV->data[0], pFrameYUV->linesize[0],
 						pFrameYUV->data[1], pFrameYUV->linesize[1],
 						pFrameYUV->data[2], pFrameYUV->linesize[2]);
 				} else 
-					SDL_UpdateTexture(bmp, &rect_src, pFrame->data[0], pFrame->linesize[0]);
+					SDL_UpdateTexture(texture, &rect_src, pFrame->data[0], pFrame->linesize[0]);
 				SDL_RenderClear(renderer);
-				SDL_RenderCopy(renderer, bmp, &rect_src, &rect_dst);
+				SDL_RenderCopy(renderer, texture, &rect_src, &rect_dst);
 				SDL_RenderPresent(renderer);
 				//SDL_Delay(66);
 			}
@@ -272,16 +272,21 @@ int CVideoDecoder::stop()
 int CVideoDecoder::close()
 {
 	int ret = 0;
-	SDL_DestroyTexture(bmp);
+	if (texture)
+		SDL_DestroyTexture(texture);
 	// Free the YUV frame
-	av_frame_free(&pFrame);
+	if (pFrame)
+		av_frame_free(&pFrame);
 
 	// Close the codec
-	avcodec_close(pCodecCtx);
+	if (pCodecCtx)
+		avcodec_close(pCodecCtx);
+	if (pCodecCtxOrig)
 	avcodec_close(pCodecCtxOrig);
 
 	// Close the video file
-	avformat_close_input(&pFormatCtx);
+	if (pFormatCtx)
+		avformat_close_input(&pFormatCtx);
 
 	bOpen = false;
 	bStarting = false;
