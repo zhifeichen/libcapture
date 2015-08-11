@@ -70,7 +70,7 @@ private:
 	friend class CResourcePool;
 	/* only get point through CResourcePool */
 	CVideoDecoder(uv_loop_t* loop);
-	~CVideoDecoder();
+	virtual ~CVideoDecoder();
 
 public:
 	int init(HWND w);
@@ -82,6 +82,42 @@ public:
 	int finit();
 	int put(cc_src_sample_t buf);
 	int put(uint8_t* buf, int len);
+};
+
+class CVideoDecoder2 : public CResource
+{
+	AVCodecID				codecId;
+	AVCodec				   *pCodec;
+	AVCodecContext		   *pCodecCtx;
+	AVCodecParserContext   *pCodecParserCtx;
+	AVPacket			   *pPacket;
+	AVFrame				   *pFrame;
+
+	struct SwsContext	   *pConvertCtx;
+	AVFrame				   *pFrameYUV;
+
+	uv_loop_t			   *pLoop;
+
+	std::deque<AVPacket*>	packetQueue;
+	uv_mutex_t			   *queueMutex;
+	uv_cond_t			   *queueNotEmpty;
+
+	bool					bInit;
+
+	uv_work_t				decodeWorkerReq;
+	static void DecodeWorker(uv_work_t* req);
+	static void AfterDecode(uv_work_t* req, int status);
+	void Decode(void);
+
+private:
+	friend class CResourcePool;
+	/* only get point through CResourcePool */
+	CVideoDecoder2(uv_loop_t* loop);
+	virtual ~CVideoDecoder2();
+
+public:
+	int Init(void);
+	void Finit(void);
 };
 
 #endif //__DECODE_VIDEO_H__

@@ -404,3 +404,91 @@ void CVideoDecoder::after_decode(uv_work_t* req, int status)
 	CVideoDecoder* self = (CVideoDecoder*)req->data;
 	self->close();
 }
+
+
+////////////////////////////
+// CVideoDecoder2
+//
+CVideoDecoder2::CVideoDecoder2(uv_loop_t* loop)
+: CResource(e_rsc_videodecoder)
+, codecId(AV_CODEC_ID_H264)
+, pLoop(loop)
+, pCodec(NULL), pCodecCtx(NULL), pCodecParserCtx(NULL)
+, packetQueue()
+, pPacket(NULL), pFrame(NULL), pFrameYUV(NULL)
+, pConvertCtx(NULL)
+, queueMutex(NULL), queueNotEmpty(NULL)
+, bInit(false)
+{
+}
+
+CVideoDecoder2::~CVideoDecoder2()
+{
+}
+
+int CVideoDecoder2::Init(void)
+{
+	int ret = -1;
+	while (!bInit){
+		queueMutex = (uv_mutex_t*)malloc(sizeof(uv_mutex_t));
+		if (!queueMutex){
+			ret = -1;
+			break;
+		}
+		ret = uv_mutex_init(queueMutex);
+		if (ret < 0){
+			break;
+		}
+		queueNotEmpty = (uv_cond_t*)malloc(sizeof(uv_cond_t));
+		if (!queueNotEmpty){
+			ret = -1;
+			break;
+		}
+		ret = uv_cond_init(queueNotEmpty);
+		if (ret < 0){
+			break;
+		}
+
+		// Register all codecs
+		avcodec_register_all();
+		pCodec = avcodec_find_decoder(codecId);
+		if (!pCodec){
+			ret = -1;
+			break;
+		}
+		pCodecCtx = avcodec_alloc_context3(pCodec);
+		if (!pCodecCtx){
+			ret = -1;
+			break;
+		}
+		if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0){
+			ret = -1;
+			break;
+		}
+
+		pCodecParserCtx = av_parser_init(codecId);
+		if (!pCodecParserCtx){
+			ret = -1;
+			break;
+		}
+		bInit = true;
+	}
+	if (!bInit){
+		Finit();
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
+void CVideoDecoder2::Finit(void)
+{
+    uv_mutex_destroy(queueMutex);
+    uv_cond_destroy(queueNotEmpty);
+	sws_freeContext(pConvertCtx);
+	av_parser_close(pCodecParserCtx);
+	av_frame_free(&pFrame);
+	av_frame_free(&pFrameYUV);
+	avcodec_close(pCodecCtx);
+	av_freep(pCodecCtx);
+}
