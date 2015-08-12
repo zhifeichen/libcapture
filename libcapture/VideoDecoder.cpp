@@ -437,6 +437,8 @@ int CVideoDecoder2::Init(void)
 		}
 		ret = uv_mutex_init(queueMutex);
 		if (ret < 0){
+            free(queueMutex);
+            queueMutex = NULL;
 			break;
 		}
 		queueNotEmpty = (uv_cond_t*)malloc(sizeof(uv_cond_t));
@@ -446,6 +448,8 @@ int CVideoDecoder2::Init(void)
 		}
 		ret = uv_cond_init(queueNotEmpty);
 		if (ret < 0){
+            free(queueNotEmpty);
+            queueNotEmpty = NULL;
 			break;
 		}
 
@@ -483,12 +487,21 @@ int CVideoDecoder2::Init(void)
 
 void CVideoDecoder2::Finit(void)
 {
-    uv_mutex_destroy(queueMutex);
-    uv_cond_destroy(queueNotEmpty);
+    if(queueMutex){
+        uv_mutex_destroy(queueMutex);
+        free(queueMutex);
+        queueMutex = NULL;
+    }
+    if(queueNotEmpty){
+        uv_cond_destroy(queueNotEmpty);
+        free(queueNotEmpty);
+        queueNotEmpty = NULL;
+    }
 	sws_freeContext(pConvertCtx);
 	av_parser_close(pCodecParserCtx);
 	av_frame_free(&pFrame);
 	av_frame_free(&pFrameYUV);
 	avcodec_close(pCodecCtx);
 	av_freep(pCodecCtx);
+    bInit = false;
 }
