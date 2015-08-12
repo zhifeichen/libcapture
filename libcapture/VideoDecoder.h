@@ -99,10 +99,11 @@ class CVideoDecoder2 : public CResource
 	uv_loop_t			   *pLoop;
 
 	std::deque<AVPacket*>	packetQueue;
-	uv_mutex_t			   *queueMutex;
-	uv_cond_t			   *queueNotEmpty;
+	uv_mutex_t			   *pQueueMutex;
+	uv_cond_t			   *pQueueNotEmpty;
 
 	bool					bInit;
+    bool                    bStop;
 
 	uv_work_t				decodeWorkerReq;
 	static void DecodeWorker(uv_work_t* req);
@@ -118,6 +119,7 @@ private:
 public:
 	int Init(void);
 	void Finit(void);
+    int put(const uint8_t* buf, int len);
 };
 
 #endif //__DECODE_VIDEO_H__

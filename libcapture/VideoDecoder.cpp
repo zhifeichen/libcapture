@@ -392,7 +392,7 @@ int CVideoDecoder::fill_iobuffer(void * opaque, uint8_t *buf, int bufsize)
 	return self->fill_iobuffer(buf, bufsize);
 }
 
-// static encode worker
+// static decode worker
 void CVideoDecoder::decode_worker(uv_work_t* req)
 {
 	CVideoDecoder* self = (CVideoDecoder*)req->data;
@@ -417,8 +417,8 @@ CVideoDecoder2::CVideoDecoder2(uv_loop_t* loop)
 , packetQueue()
 , pPacket(NULL), pFrame(NULL), pFrameYUV(NULL)
 , pConvertCtx(NULL)
-, queueMutex(NULL), queueNotEmpty(NULL)
-, bInit(false)
+, pQueueMutex(NULL), pQueueNotEmpty(NULL)
+, bInit(false), bStop(false)
 {
 }
 
@@ -430,26 +430,26 @@ int CVideoDecoder2::Init(void)
 {
 	int ret = -1;
 	while (!bInit){
-		queueMutex = (uv_mutex_t*)malloc(sizeof(uv_mutex_t));
-		if (!queueMutex){
+        pQueueMutex = (uv_mutex_t*)malloc(sizeof(uv_mutex_t));
+        if(!pQueueMutex){
 			ret = -1;
 			break;
 		}
-		ret = uv_mutex_init(queueMutex);
+        ret = uv_mutex_init(pQueueMutex);
 		if (ret < 0){
-            free(queueMutex);
-            queueMutex = NULL;
+            free(pQueueMutex);
+            pQueueMutex = NULL;
 			break;
 		}
-		queueNotEmpty = (uv_cond_t*)malloc(sizeof(uv_cond_t));
-		if (!queueNotEmpty){
+        pQueueNotEmpty = (uv_cond_t*)malloc(sizeof(uv_cond_t));
+        if(!pQueueNotEmpty){
 			ret = -1;
 			break;
 		}
-		ret = uv_cond_init(queueNotEmpty);
+        ret = uv_cond_init(pQueueNotEmpty);
 		if (ret < 0){
-            free(queueNotEmpty);
-            queueNotEmpty = NULL;
+            free(pQueueNotEmpty);
+            pQueueNotEmpty = NULL;
 			break;
 		}
 
@@ -487,15 +487,15 @@ int CVideoDecoder2::Init(void)
 
 void CVideoDecoder2::Finit(void)
 {
-    if(queueMutex){
-        uv_mutex_destroy(queueMutex);
-        free(queueMutex);
-        queueMutex = NULL;
+    if(pQueueMutex){
+        uv_mutex_destroy(pQueueMutex);
+        free(pQueueMutex);
+        pQueueMutex = NULL;
     }
-    if(queueNotEmpty){
-        uv_cond_destroy(queueNotEmpty);
-        free(queueNotEmpty);
-        queueNotEmpty = NULL;
+    if(pQueueNotEmpty){
+        uv_cond_destroy(pQueueNotEmpty);
+        free(pQueueNotEmpty);
+        pQueueNotEmpty = NULL;
     }
 	sws_freeContext(pConvertCtx);
 	av_parser_close(pCodecParserCtx);
@@ -504,4 +504,79 @@ void CVideoDecoder2::Finit(void)
 	avcodec_close(pCodecCtx);
 	av_freep(pCodecCtx);
     bInit = false;
+}
+
+int CVideoDecoder2::put(const uint8_t* buf, int len)
+{
+    if(!bInit){
+        return -1;
+    }
+    if(!buf || len == 0){
+        return 0;
+    }
+    AVPacket *pkt = (AVPacket*)av_malloc(sizeof(AVPacket));
+    if(!pkt){
+        return -1;
+    }
+    av_init_packet(pkt);
+    const uint8_t *curBuf = buf;
+    int      curLen = len;
+    bool     bPushed = false;
+    uv_mutex_lock(pQueueMutex);
+    while(curLen > 0){
+        int parserLen = av_parser_parse2(pCodecParserCtx, pCodecCtx, 
+                                         &pkt->data, &pkt->size, 
+                                         curBuf, curLen, 
+                                         AV_NOPTS_VALUE, AV_NOPTS_VALUE, AV_NOPTS_VALUE);
+        curBuf += parserLen;
+        curLen -= parserLen;
+        if(pkt->size == 0)
+            continue;
+        packetQueue.push_back(pkt);
+        bPushed = true;
+    }
+    uv_mutex_unlock(pQueueMutex);
+    if(bPushed){
+        uv_cond_signal(pQueueNotEmpty);
+    }
+    return 0;
+}
+
+// the decode work thread
+void CVideoDecoder2::Decode(void)
+{
+    while(!bStop){
+        int ret;
+        uv_mutex_lock(pQueueMutex);
+        if(packetQueue.size() == 0){
+            ret = uv_cond_timedwait(pQueueNotEmpty, pQueueMutex, (uint64_t)(1000 * 1e6));
+            if(ret == UV_ETIMEDOUT){
+                uv_mutex_unlock(pQueueMutex);
+                continue;
+            }
+        }
+        AVPacket* pkt = packetQueue.front();
+        packetQueue.pop_front();
+        uv_mutex_unlock(pQueueMutex);
+
+        int gotPicture;
+        AVFrame* frame = av_frame_alloc();
+        if(frame){
+            ret = avcodec_decode_video2(pCodecCtx, frame, &gotPicture, pkt);
+        }
+        av_free_packet(pkt);
+        av_freep(pkt);
+    }
+}
+
+// static decode worker
+void CVideoDecoder2::DecodeWorker(uv_work_t* req)
+{
+    CVideoDecoder2* d = (CVideoDecoder2*)req->data;
+    d->Decode();
+}
+
+void CVideoDecoder2::AfterDecode(uv_work_t* req, int status)
+{
+    CVideoDecoder2* d = (CVideoDecoder2*)req->data;
 }
