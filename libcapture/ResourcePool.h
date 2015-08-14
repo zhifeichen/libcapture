@@ -30,11 +30,13 @@ private:
 class CResourcePool
 {
 public:
-	static CResourcePool& GetInstance(void);
+	static CResourcePool* GetInstance(void);
 	CResource* Get(E_RESOURCE_TYPE type);
 	int Init(uv_loop_t* loop);
 	int Uninit(void);
 	int PostCollect(void);
+    int Close(void);
+    void PostClose(void);
 
 	int GetResourceCount(void){ return m_listResource.size(); }
 private:
@@ -43,13 +45,18 @@ private:
 	CResourcePool(const CResourcePool&);
 	CResourcePool& operator=(const CResourcePool&);
 
-	static void DoNothing(uv_work_t*){};
-	static void DoCollect(uv_work_t* req, int status);
-	void DoCollect(int status);
+    static void DoCollect(uv_work_t*);
+	static void AfterCollect(uv_work_t* req, int status);
+	void DoCollect(void);
 
 	std::list<CResource*> m_listResource;
-	uv_mutex_t m_mtxList;
-	uv_loop_t* m_pLoop;
+	uv_mutex_t  m_mtxList;
+    uv_cond_t   m_cndList;
+    uv_sem_t    m_semClose;
+	uv_loop_t  *m_pLoop;
+    bool        m_bStop;
+
+    static CResourcePool *gPool;
 };
 
 

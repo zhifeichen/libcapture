@@ -1146,12 +1146,12 @@ HRESULT CRemoteSys::StartRemotePreview(int userid, HWND h)
 	if (h)
 		h_wnd = h;
 	if (!vdecoder){
-		vdecoder = dynamic_cast<CVideoDecoder*>(CResourcePool::GetInstance().Get(e_rsc_videodecoder));
+		vdecoder = dynamic_cast<CVideoDecoder*>(CResourcePool::GetInstance()->Get(e_rsc_videodecoder));
 		if (!vdecoder) return S_FALSE;
 		vdecoder->init(h_wnd);
 	}
 	if (!adecoder){
-		adecoder = dynamic_cast<CAudioDecoder*>(CResourcePool::GetInstance().Get(e_rsc_audiodecoder));
+        adecoder = dynamic_cast<CAudioDecoder*>(CResourcePool::GetInstance()->Get(e_rsc_audiodecoder));
 		if (!adecoder) return S_FALSE;
 		adecoder->init();
 	}

@@ -133,7 +133,7 @@ int CCaptureSys::ConnectToServer(char* ip, uint16_t port)
         m_pMsgSocket->dis_connect();
         m_pMsgSocket = NULL;
     }
-	m_pMsgSocket = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance().Get(e_rsc_msgsocket));
+    m_pMsgSocket = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance()->Get(e_rsc_msgsocket));
     if (!m_pMsgSocket){
         return -1;
     }

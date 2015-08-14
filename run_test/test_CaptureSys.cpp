@@ -81,6 +81,7 @@ TEST_IMPL(CaptureSysMsg)
 	int ret = -1;
 	uv_loop_t* loop = uv_default_loop();
 	if (!loop) return;
+    CResourcePool::GetInstance()->Init(loop);
 	cc_userinfo_t userinfo = { 0 };
 	cc_userinfo_t userinfo2 = { 0 };
 
@@ -113,9 +114,11 @@ TEST_IMPL(CaptureSysMsg)
 	printf("connect_sever return %d\n", ret);
 	//printf("s stat: %d\n", s->get_stat());
 	//printf("s2 stat: %d\n", s2->get_stat());
+    CResourcePool::GetInstance()->PostClose();
 	uv_run(loop, UV_RUN_DEFAULT);
 	printf("stop!\n");
-	printf("Resource count: %d\n", CResourcePool::GetInstance().GetResourceCount());
+    printf("Resource count: %d\n", CResourcePool::GetInstance()->GetResourceCount());
+    CResourcePool::GetInstance()->Uninit();
 _clean:
 	css_server_stop();
 	css_server_clean();

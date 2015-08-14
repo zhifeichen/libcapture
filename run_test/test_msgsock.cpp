@@ -37,7 +37,7 @@ static void do_newuser(MyMSG* msg, CMsgSocket* s)
 		s2->dis_connect();
 		return;
 	}
-	CMsgSocket* s11 = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance().Get(e_rsc_msgsocket));
+    CMsgSocket* s11 = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance()->Get(e_rsc_msgsocket));
 	if (s == s1) s1 = s11;
 	else s2 = s11;
 	cc_userinfo_t userinfo = { 0 };
@@ -94,7 +94,7 @@ TEST_IMPL(msgsock)
     int ret = -1;
 	uv_loop_t* loop = uv_default_loop();
     if (!loop) return;
-	CResourcePool::GetInstance().Init(loop);
+    CResourcePool::GetInstance()->Init(loop);
     cc_userinfo_t userinfo = { 0 };
     cc_userinfo_t userinfo2 = { 0 };
 
@@ -123,12 +123,12 @@ TEST_IMPL(msgsock)
     //    }
     //}
 
-	s1 = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance().Get(e_rsc_msgsocket));
+    s1 = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance()->Get(e_rsc_msgsocket));
     s1->set_local_user(&userinfo);
     s1->on_received(s1, on_msg);
     s1->on_received_frame(s1, on_frame);
 
-	s2 = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance().Get(e_rsc_msgsocket));
+    s2 = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance()->Get(e_rsc_msgsocket));
     s2->set_local_user(&userinfo2);
     s2->on_received(s2, on_msg);
     s2->on_received_frame(s2, on_frame);
@@ -139,14 +139,16 @@ TEST_IMPL(msgsock)
     printf("connect_sever return %d\n", ret);
     printf("s stat: %d\n", s1->get_stat());
     printf("s2 stat: %d\n", s2->get_stat());
-	CMsgSocket* ss = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance().Get(e_rsc_msgsocket));
+    CMsgSocket* ss = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance()->Get(e_rsc_msgsocket));
 	ss->dis_connect();
-	ss = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance().Get(e_rsc_msgsocket));
+    ss = dynamic_cast<CMsgSocket*>(CResourcePool::GetInstance()->Get(e_rsc_msgsocket));
 	ss->connect_sever("127.0.0.1", 5566);
 	ss->dis_connect();
+    CResourcePool::GetInstance()->PostClose();
     uv_run(loop, UV_RUN_DEFAULT);
     printf("stop!\n");
-	printf("Resource count: %d\n", CResourcePool::GetInstance().GetResourceCount());
+    printf("Resource count: %d\n", CResourcePool::GetInstance()->GetResourceCount());
+    CResourcePool::GetInstance()->Uninit();
 _clean:
     css_server_stop();
     css_server_clean();

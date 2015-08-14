@@ -410,7 +410,7 @@ void CVideoDecoder::after_decode(uv_work_t* req, int status)
 // CVideoDecoder2
 //
 CVideoDecoder2::CVideoDecoder2(uv_loop_t* loop)
-: CResource(e_rsc_videodecoder)
+: CResource(e_rsc_videodecoder2)
 , codecId(AV_CODEC_ID_H264)
 , pLoop(loop)
 , pCodec(NULL), pCodecCtx(NULL), pCodecParserCtx(NULL)
@@ -475,6 +475,12 @@ int CVideoDecoder2::Init(void)
 			ret = -1;
 			break;
 		}
+        decodeWorkerReq.data = this;
+        ret = uv_queue_work(pLoop, &decodeWorkerReq, DecodeWorker, AfterDecode);
+        if(ret < 0){
+            bStop = true;
+            break;
+        }
 		bInit = true;
 	}
 	if (!bInit){
@@ -542,6 +548,25 @@ int CVideoDecoder2::put(const uint8_t* buf, int len)
     return 0;
 }
 
+int CVideoDecoder2::stop(void)
+{
+    if(!bStop){
+        bStop = true;
+        return 0;
+    } else {
+        Close();
+        return 0;
+    }
+}
+
+void CVideoDecoder2::Close(void)
+{
+    if(bInit){
+        Finit();
+    }
+    Release();
+}
+
 // the decode work thread
 void CVideoDecoder2::Decode(void)
 {
@@ -563,6 +588,9 @@ void CVideoDecoder2::Decode(void)
         AVFrame* frame = av_frame_alloc();
         if(frame){
             ret = avcodec_decode_video2(pCodecCtx, frame, &gotPicture, pkt);
+            if(ret < 0){
+                bStop = true;
+            }
         }
         av_free_packet(pkt);
         av_freep(pkt);
@@ -579,4 +607,5 @@ void CVideoDecoder2::DecodeWorker(uv_work_t* req)
 void CVideoDecoder2::AfterDecode(uv_work_t* req, int status)
 {
     CVideoDecoder2* d = (CVideoDecoder2*)req->data;
+    d->Finit();
 }

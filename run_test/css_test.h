@@ -32,6 +32,7 @@ typedef enum
 	XX(msgsock, TCASE_ACTIVE)				\
 	XX(CaptureSysMsg, TCASE_ACTIVE)		    \
     XX(AudioDecoder, TCASE_ACTIVE)          \
+    XX(VideoDecoder2, TCASE_ACTIVE)         \
 
 /**
  * test imple

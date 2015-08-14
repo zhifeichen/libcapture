@@ -116,10 +116,12 @@ private:
 	CVideoDecoder2(uv_loop_t* loop);
 	virtual ~CVideoDecoder2();
 
+    void Finit(void);
+    void Close(void);
 public:
 	int Init(void);
-	void Finit(void);
     int put(const uint8_t* buf, int len);
+    int stop(void);
 };
 
 #endif //__DECODE_VIDEO_H__
