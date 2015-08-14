@@ -100,6 +100,9 @@ CResource* CResourcePool::Get(E_RESOURCE_TYPE type)
 	case e_rsc_videodecoder:
 		r = new CVideoDecoder(m_pLoop);
 		break;
+    case e_rsc_videodecoder2:
+        r = new CVideoDecoder2(m_pLoop);
+        break;
 	default:
 		break;
 	}

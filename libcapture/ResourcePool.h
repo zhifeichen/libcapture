@@ -9,7 +9,8 @@ typedef enum {
 	e_rsc_aacencoder,
 	e_rsc_x264encoder,
 	e_rsc_audiodecoder,
-	e_rsc_videodecoder
+	e_rsc_videodecoder,
+    e_rsc_videodecoder2
 }E_RESOURCE_TYPE;
 
 class CResource
