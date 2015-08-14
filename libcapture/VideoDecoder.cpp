@@ -607,5 +607,5 @@ void CVideoDecoder2::DecodeWorker(uv_work_t* req)
 void CVideoDecoder2::AfterDecode(uv_work_t* req, int status)
 {
     CVideoDecoder2* d = (CVideoDecoder2*)req->data;
-    d->Finit();
+    d->Close();
 }
