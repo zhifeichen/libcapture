@@ -84,6 +84,8 @@ public:
 	int put(uint8_t* buf, int len);
 };
 
+typedef void(*DECODE_FRAME_FN)(AVFrame*, int);
+
 class CVideoDecoder2 : public CResource
 {
 	AVCodecID				codecId;
@@ -110,6 +112,8 @@ class CVideoDecoder2 : public CResource
 	static void AfterDecode(uv_work_t* req, int status);
 	void Decode(void);
 
+    DECODE_FRAME_FN         fnCallback;
+    void                   *pUserData;
 private:
 	friend class CResourcePool;
 	/* only get point through CResourcePool */
@@ -120,6 +124,7 @@ private:
     void Close(void);
 public:
 	int Init(void);
+    int SetFrameCallback(DECODE_FRAME_FN cb, void* data);
     int Put(const uint8_t* buf, int len);
     int Stop(void);
 };

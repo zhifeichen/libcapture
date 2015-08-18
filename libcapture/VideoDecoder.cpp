@@ -419,6 +419,7 @@ CVideoDecoder2::CVideoDecoder2(uv_loop_t* loop)
 , pConvertCtx(NULL)
 , pQueueMutex(NULL), pQueueNotEmpty(NULL)
 , bInit(false), bStop(false)
+, fnCallback(NULL), pUserData(NULL)
 {
 }
 
@@ -512,6 +513,13 @@ void CVideoDecoder2::Finit(void)
     bInit = false;
 }
 
+int CVideoDecoder2::SetFrameCallback(DECODE_FRAME_FN cb, void* data)
+{
+    fnCallback = cb;
+    pUserData = data;
+    return 0;
+}
+
 int CVideoDecoder2::Put(const uint8_t* buf, int len)
 {
     if(!bInit){
@@ -593,9 +601,14 @@ void CVideoDecoder2::Decode(void)
             ret = avcodec_decode_video2(pCodecCtx, frame, &gotPicture, pkt);
             if(ret < 0){
                 bStop = true;
+                av_frame_free(&frame);
+                frame = NULL;
             }
         } else{
             bStop = true;
+        }
+        if(fnCallback){
+            fnCallback(frame, ret);
         }
         av_free_packet(pkt);
         av_freep(pkt);
@@ -613,13 +626,16 @@ void CVideoDecoder2::Decode(void)
         if(frame){
             ret = avcodec_decode_video2(pCodecCtx, frame, &gotPicture, &pkt);
             if(ret < 0){
-                break;
+                av_frame_free(&frame);
+                frame = NULL;
             }
         } else{
             ret = -1;
-            break;
         }
-    } while(ret > 0);
+        if(fnCallback){
+            fnCallback(frame, ret);
+        }
+    } while(ret >= 0);
 }
 
 // static decode worker
