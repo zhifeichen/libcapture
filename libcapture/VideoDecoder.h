@@ -120,8 +120,8 @@ private:
     void Close(void);
 public:
 	int Init(void);
-    int put(const uint8_t* buf, int len);
-    int stop(void);
+    int Put(const uint8_t* buf, int len);
+    int Stop(void);
 };
 
 #endif //__DECODE_VIDEO_H__

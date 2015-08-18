@@ -512,7 +512,7 @@ void CVideoDecoder2::Finit(void)
     bInit = false;
 }
 
-int CVideoDecoder2::put(const uint8_t* buf, int len)
+int CVideoDecoder2::Put(const uint8_t* buf, int len)
 {
     if(!bInit){
         return -1;
@@ -520,16 +520,18 @@ int CVideoDecoder2::put(const uint8_t* buf, int len)
     if(!buf || len == 0){
         return 0;
     }
-    AVPacket *pkt = (AVPacket*)av_malloc(sizeof(AVPacket));
-    if(!pkt){
-        return -1;
-    }
-    av_init_packet(pkt);
+    int ret = -1;
     const uint8_t *curBuf = buf;
     int      curLen = len;
     bool     bPushed = false;
     uv_mutex_lock(pQueueMutex);
     while(curLen > 0){
+        AVPacket *pkt = (AVPacket*)av_malloc(sizeof(AVPacket));
+        if(!pkt){
+            ret = -1;
+            break;
+        }
+        av_init_packet(pkt);
         int parserLen = av_parser_parse2(pCodecParserCtx, pCodecCtx, 
                                          &pkt->data, &pkt->size, 
                                          curBuf, curLen, 
@@ -540,15 +542,16 @@ int CVideoDecoder2::put(const uint8_t* buf, int len)
             continue;
         packetQueue.push_back(pkt);
         bPushed = true;
+        ret = 0;
     }
     uv_mutex_unlock(pQueueMutex);
-    if(bPushed){
+    if(ret >= 0 && bPushed){
         uv_cond_signal(pQueueNotEmpty);
     }
-    return 0;
+    return ret;
 }
 
-int CVideoDecoder2::stop(void)
+int CVideoDecoder2::Stop(void)
 {
     if(!bStop){
         bStop = true;
@@ -591,10 +594,32 @@ void CVideoDecoder2::Decode(void)
             if(ret < 0){
                 bStop = true;
             }
+        } else{
+            bStop = true;
         }
         av_free_packet(pkt);
         av_freep(pkt);
     }
+
+    // flush
+    AVPacket pkt;
+    av_init_packet(&pkt);
+    pkt.data = NULL;
+    pkt.size = 0;
+    int ret;
+    do{
+        int gotPicture;
+        AVFrame* frame = av_frame_alloc();
+        if(frame){
+            ret = avcodec_decode_video2(pCodecCtx, frame, &gotPicture, &pkt);
+            if(ret < 0){
+                break;
+            }
+        } else{
+            ret = -1;
+            break;
+        }
+    } while(ret > 0);
 }
 
 // static decode worker
