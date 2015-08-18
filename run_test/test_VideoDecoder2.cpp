@@ -9,7 +9,7 @@ TEST_IMPL(VideoDecoder2)
     CVideoDecoder2* dec = dynamic_cast<CVideoDecoder2*>(CResourcePool::GetInstance()->Get(e_rsc_videodecoder2));
     dec->Init();
     //dec->open();
-    dec->stop();
+    dec->Stop();
     printf("active handle: %d\n", uv_loop_alive(loop));
     printf("Resource count: %d\n", CResourcePool::GetInstance()->GetResourceCount());
     CResourcePool::GetInstance()->PostClose();
