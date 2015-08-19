@@ -550,8 +550,12 @@ int CVideoDecoder2::Put(const uint8_t* buf, int len)
             av_freep(pkt);
             continue;
         }
-        packetQueue.push_back(pkt);
+        AVPacket *pkt2 = (AVPacket*)av_malloc(sizeof(AVPacket));
+        ret = av_copy_packet(pkt2, pkt);
+        packetQueue.push_back(pkt2);
         bPushed = true;
+        av_free_packet(pkt);
+        av_freep(pkt);
         ret = 0;
     }
     uv_mutex_unlock(pQueueMutex);
