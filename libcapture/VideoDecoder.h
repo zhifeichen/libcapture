@@ -84,7 +84,7 @@ public:
 	int put(uint8_t* buf, int len);
 };
 
-typedef void(*DECODE_FRAME_FN)(AVFrame*, int);
+typedef void(*DECODE_FRAME_FN)(AVFrame*, int, void*);
 
 class CVideoDecoder2 : public CResource
 {
@@ -121,12 +121,12 @@ private:
 	virtual ~CVideoDecoder2();
 
     void Finit(void);
-    void Close(void);
 public:
 	int Init(void);
     int SetFrameCallback(DECODE_FRAME_FN cb, void* data);
     int Put(const uint8_t* buf, int len);
     int Stop(void);
+    void Close(CLOSERESOURCECB cb = NULL);
 };
 
 #endif //__DECODE_VIDEO_H__

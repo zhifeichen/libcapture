@@ -546,8 +546,10 @@ int CVideoDecoder2::Put(const uint8_t* buf, int len)
                                          AV_NOPTS_VALUE, AV_NOPTS_VALUE, AV_NOPTS_VALUE);
         curBuf += parserLen;
         curLen -= parserLen;
-        if(pkt->size == 0)
+        if(pkt->size == 0){
+            av_freep(pkt);
             continue;
+        }
         packetQueue.push_back(pkt);
         bPushed = true;
         ret = 0;
@@ -563,19 +565,16 @@ int CVideoDecoder2::Stop(void)
 {
     if(!bStop){
         bStop = true;
-        return 0;
-    } else {
-        Close();
-        return 0;
     }
+    return 0;
 }
 
-void CVideoDecoder2::Close(void)
+void CVideoDecoder2::Close(CLOSERESOURCECB cb)
 {
     if(bInit){
         Finit();
     }
-    Release();
+    CResource::Close(cb);
 }
 
 // the decode work thread
@@ -603,15 +602,28 @@ void CVideoDecoder2::Decode(void)
                 bStop = true;
                 av_frame_free(&frame);
                 frame = NULL;
+                if(fnCallback){
+                    fnCallback(frame, ret, pUserData);
+                }
+                av_free_packet(pkt);
+                av_freep(pkt);
+                continue;
+            }
+            if(gotPicture && fnCallback){
+                fnCallback(frame, ret, pUserData);
+                av_free_packet(pkt);
+                av_freep(pkt);
+                continue;
             }
         } else{
             bStop = true;
+            if(fnCallback){
+                fnCallback(frame, ret, pUserData);
+            }
+            av_free_packet(pkt);
+            av_freep(pkt);
+            continue;
         }
-        if(fnCallback){
-            fnCallback(frame, ret);
-        }
-        av_free_packet(pkt);
-        av_freep(pkt);
     }
 
     // flush
@@ -625,7 +637,7 @@ void CVideoDecoder2::Decode(void)
         AVFrame* frame = av_frame_alloc();
         if(frame){
             ret = avcodec_decode_video2(pCodecCtx, frame, &gotPicture, &pkt);
-            if(ret < 0){
+            if(ret < 0 || !gotPicture){
                 av_frame_free(&frame);
                 frame = NULL;
             }
@@ -633,9 +645,9 @@ void CVideoDecoder2::Decode(void)
             ret = -1;
         }
         if(fnCallback){
-            fnCallback(frame, ret);
+            fnCallback(frame, ret, pUserData);
         }
-    } while(ret >= 0);
+    } while(ret > 0);
 }
 
 // static decode worker
