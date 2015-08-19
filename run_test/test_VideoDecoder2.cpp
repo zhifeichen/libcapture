@@ -29,6 +29,7 @@ void DoPutBuf(CVideoDecoder2* dec)
                 dec->Put(buf, len);
             }
         } while(feof(fd) == 0);
+        dec->Put(0, 0);
         fclose(fd);
     }
 }

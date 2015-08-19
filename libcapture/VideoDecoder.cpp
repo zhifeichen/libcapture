@@ -525,13 +525,28 @@ int CVideoDecoder2::Put(const uint8_t* buf, int len)
     if(!bInit){
         return -1;
     }
-    if(!buf || len == 0){
-        return 0;
-    }
+
     int ret = -1;
     const uint8_t *curBuf = buf;
     int      curLen = len;
     bool     bPushed = false;
+    
+    if(!buf && len == 0){ // done, there are no more data put in
+        AVPacket *pkt = (AVPacket*)av_malloc(sizeof(AVPacket));
+        if(!pkt){
+            ret = -1;
+            return ret;
+        }
+        av_init_packet(pkt);
+        pkt->data = const_cast<uint8_t*>(buf);
+        pkt->size = len;
+
+        uv_mutex_lock(pQueueMutex);
+        packetQueue.push_back(pkt);
+        uv_mutex_unlock(pQueueMutex);
+        uv_cond_signal(pQueueNotEmpty);
+        return 0;
+    }
     uv_mutex_lock(pQueueMutex);
     while(curLen > 0){
         AVPacket *pkt = (AVPacket*)av_malloc(sizeof(AVPacket));
@@ -598,6 +613,12 @@ void CVideoDecoder2::Decode(void)
         packetQueue.pop_front();
         uv_mutex_unlock(pQueueMutex);
 
+        if(pkt->data == NULL){ // done, no more packet
+            bStop = true;
+            av_freep(pkt);
+            continue;
+        }
+
         int gotPicture;
         AVFrame* frame = av_frame_alloc();
         if(frame){
@@ -644,6 +665,9 @@ void CVideoDecoder2::Decode(void)
             if(ret < 0 || !gotPicture){
                 av_frame_free(&frame);
                 frame = NULL;
+                if(ret == 0){
+                    ret = -1;
+                }
             }
         } else{
             ret = -1;
@@ -651,7 +675,7 @@ void CVideoDecoder2::Decode(void)
         if(fnCallback){
             fnCallback(frame, ret, pUserData);
         }
-    } while(ret > 0);
+    } while(ret >= 0);
 }
 
 // static decode worker
