@@ -13,6 +13,9 @@ typedef enum {
     e_rsc_videodecoder2
 }E_RESOURCE_TYPE;
 
+class CResource;
+typedef void(*CLOSERESOURCECB)(CResource* r);
+
 class CResource
 {
 	friend class CResourcePool;
@@ -21,10 +24,12 @@ protected:
 	virtual ~CResource();
 
 	void Release(void);
+    virtual void Close(CLOSERESOURCECB cb = NULL);
 
 private:
 	E_RESOURCE_TYPE m_eType;
 	bool m_bCanCollection;
+    CLOSERESOURCECB m_fnCB;
 };
 
 class CResourcePool

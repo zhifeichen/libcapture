@@ -7,7 +7,8 @@
 
 CResource::CResource(E_RESOURCE_TYPE type):
 m_eType(type),
-m_bCanCollection(false)
+m_bCanCollection(false),
+m_fnCB(NULL)
 {
 }
 
@@ -19,6 +20,12 @@ void CResource::Release(void)
 {
 	m_bCanCollection = true;
 	CResourcePool::GetInstance()->PostCollect();
+}
+
+void CResource::Close(CLOSERESOURCECB cb)
+{
+    m_fnCB = cb;
+    Release();
 }
 
 CResourcePool* CResourcePool::gPool = NULL;
@@ -93,6 +100,9 @@ void CResourcePool::DoCollect(void)
             it++;
             if(r->m_bCanCollection){
                 m_listResource.erase(it1);
+                if(r->m_fnCB){
+                    r->m_fnCB(r);
+                }
                 delete r;
             }
         }
