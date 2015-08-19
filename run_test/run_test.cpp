@@ -25,6 +25,8 @@
 int _tmain(int argc, _TCHAR* argv[])
 {
 	css_do_test_all();
+    printf("test end, press any key exit...");
+    getchar();
 	return 0;
 }
 
