@@ -101,6 +101,7 @@
     <ClInclude Include="AudioDecoder.h" />
     <ClInclude Include="CaptureSys.h" />
     <ClInclude Include="DshowCapture.h" />
+    <ClInclude Include="Codecer.h" />
     <ClInclude Include="IFilter.h" />
     <ClInclude Include="libcapture.h" />
     <ClInclude Include="MsgSocket.h" />

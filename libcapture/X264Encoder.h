@@ -5,7 +5,7 @@
 #include "libcapture.h"
 #include <deque>
 #include "uv\uv.h"
-#include "ResourcePool.h"
+#include "Codecer.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -54,4 +54,26 @@ public:
 	int stop_encode();
 };
 
+class CX264Encoder2 : public CEncoder
+{
+private:
+    uv_work_t				encodeWorkerReq;
+    static void EncodeWorker(uv_work_t* req);
+    static void AfterEncode(uv_work_t* req, int status);
+    void Encode(void);
+
+private:
+    friend class CResourcePool;
+    /* only get point through CResourcePool */
+    CX264Encoder2(uv_loop_t* loop);
+    virtual ~CX264Encoder2();
+
+public:
+    virtual int Init(void) = 0;
+    virtual int SetParam(void* param) = 0;
+    virtual int Put(AVFrame* frame) = 0;
+    virtual int SetEncodeCallback(ENCODER_CB cb, void* data){ m_fnCb = cb, m_pUserdata = data; }
+    virtual int Stop(void) = 0;
+    virtual void Close(CLOSERESOURCECB cb = NULL){ CResource::Close(cb); }
+};
 #endif //__X264_ENCODE_H__
