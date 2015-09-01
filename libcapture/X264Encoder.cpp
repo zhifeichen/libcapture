@@ -225,3 +225,77 @@ void CX264Encoder::after_encode(uv_work_t* req, int status)
 	CX264Encoder* self = (CX264Encoder*)req->data;
 	self->close();
 }
+
+
+///////////////////////////////////
+// CX264Encoder2
+//
+
+int CX264Encoder2::Put(AVFrame* frame)
+{
+    uv_mutex_lock(pQueueMutex);
+    if(queueFrame.size() > 50){
+        uv_mutex_unlock(pQueueMutex);
+        av_frame_free(&frame);
+        return 0;
+    }
+    queueFrame.push_back(frame);
+    printf("%d", queueFrame.size());
+    uv_mutex_unlock(pQueueMutex);
+    uv_cond_signal(pQueueNotEmpty);
+    return 0;
+}
+
+void CX264Encoder2::Encode(void)
+{
+    int ret;
+    int gotPic;
+    while(!bStop){
+        uv_mutex_lock(pQueueMutex);
+        if(queueFrame.size() == 0){
+            ret = uv_cond_timedwait(pQueueNotEmpty, pQueueMutex, (uint64_t)(500 * 1e6));
+            if(ret == UV_ETIMEDOUT){
+                uv_mutex_unlock(pQueueMutex);
+                MessageBox(NULL, TEXT("BUFFER EMPTY!"), TEXT("remote preview"), MB_OK);
+                continue;
+            }
+        }
+
+        AVFrame* frame = queueFrame.front();
+        queueFrame.pop_front();
+        uv_mutex_unlock(pQueueMutex);
+
+        /* encode the image */
+        AVPacket *pkt = (AVPacket*)av_malloc(sizeof(AVPacket));
+        av_init_packet(pkt);
+        ret = avcodec_encode_video2(pCodecCtx, pkt, frame, &gotPic);
+        if(ret < 0) {
+            printf("Error encoding frame\n");
+            break;
+        }
+        if(gotPic) {
+            //printf("Succeed to encode frame: %5d\tsize:%5d\n", framecnt, pkt->size);
+            //framecnt++;
+            //fwrite(pkt->data, 1, pkt->size, fp_out);
+            if(m_fnCb){
+                m_fnCb(pkt, m_pUserdata);
+            }
+        } else{
+            av_free_packet(pkt);
+            av_freep(pkt);
+        }
+    }
+}
+
+// static encode worker
+void CX264Encoder2::EncodeWorker(uv_work_t* req)
+{
+    CX264Encoder2* self = (CX264Encoder2*)req->data;
+    self->Encode();
+}
+
+void CX264Encoder2::AfterEncode(uv_work_t* req, int status)
+{
+    CX264Encoder2* self = (CX264Encoder2*)req->data;
+    self->Close();
+}

@@ -57,6 +57,13 @@ public:
 class CX264Encoder2 : public CEncoder
 {
 private:
+    AVCodecContext		   *pCodecCtx;
+
+    uv_mutex_t			   *pQueueMutex;
+    uv_cond_t			   *pQueueNotEmpty;
+    std::deque<AVFrame*>    queueFrame;
+
+    bool                    bStop;
     uv_work_t				encodeWorkerReq;
     static void EncodeWorker(uv_work_t* req);
     static void AfterEncode(uv_work_t* req, int status);
@@ -71,7 +78,7 @@ private:
 public:
     virtual int Init(void) = 0;
     virtual int SetParam(void* param) = 0;
-    virtual int Put(AVFrame* frame) = 0;
+    virtual int Put(AVFrame* frame);
     virtual int SetEncodeCallback(ENCODER_CB cb, void* data){ m_fnCb = cb, m_pUserdata = data; }
     virtual int Stop(void) = 0;
     virtual void Close(CLOSERESOURCECB cb = NULL){ CResource::Close(cb); }
